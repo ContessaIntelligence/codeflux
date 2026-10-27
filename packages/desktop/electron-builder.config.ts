@@ -160,7 +160,8 @@ const getBase = (appId: string): Configuration => {
     },
     mac: {
       category: "public.app-category.developer-tools",
-      icon: `resources/icons/icon.icns`,
+      // electron-builder turns a 512x512 PNG into the .icns itself. The checked-in icon.icns is still OpenCode's.
+      icon: `resources/icons/icon.png`,
       extendInfo: {
         NSMicrophoneUsageDescription: DESKTOP_NATIVE_ENGLISH["desktop.microphoneUsage"],
         NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac: true,

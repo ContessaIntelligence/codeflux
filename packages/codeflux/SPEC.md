@@ -216,3 +216,33 @@ Status: delivered. The user confirmed the build works and closed the project pha
 - Remove `assets/derived/image_52ba2de5.jpg` (stray file).
 - Stray `opencode-cli.exe` processes can stay behind after the window closes; stop them before repackaging.
 - If CodeFlux is rebuilt, keep the order: CLI (`latest`, `--baseline`) first, then desktop build and pack (section 5).
+
+## 14. Publishing builds from GitHub
+
+Repository: `https://github.com/ContessaIntelligence/codeflux`, default branch `main`.
+
+**Workflow**: `.github/workflows/codeflux-release.yml` (new). It runs on a pushed tag `v*` or by hand (Actions → codeflux-release → Run workflow, enter the version). Three jobs run in parallel, each building the CLI on the `latest` channel (`--single --baseline`), then the desktop app (`build`, `pack`), and a final `publish` job creates the GitHub release with the files and `SHA256SUMS.txt`.
+
+| Runner | Release files |
+|---|---|
+| `windows-2025` | `CodeFlux-win-x64.exe` (NSIS installer, built in a second `pack` pass around the unpacked app), `CodeFlux-windows-x64-portable.zip` (the unpacked app, the form verified locally) |
+| `ubuntu-24.04` | `CodeFlux-linux-x86_64.AppImage`, `.deb`, `.rpm` (names follow electron-builder's `${arch}`) |
+| `macos-15` (Apple Silicon) | `CodeFlux-mac-arm64.app.tar` |
+
+The upstream scripts keep their `opencode-desktop-*` file names; the workflow renames the files to `CodeFlux-*` when collecting them, so no local script changed for this.
+
+**Change to a local build file**: `packages/desktop/electron-builder.config.ts` now points `mac.icon` at `icon.png` (512×512) so electron-builder generates the macOS icon; the checked-in `icon.icns` is still OpenCode's. Nothing else in the local build flow changes; section 5 still works as before.
+
+**Before the first run**
+1. `bun.lock` is stale: it lacks `png-to-ico` (and `sharp`) from `packages/codeflux`, so the `bun install --frozen-lockfile` in CI fails. Run `bun install` at the repository root and commit `bun.lock`.
+2. Done: the stray tracked files `exe-icon.png` and `packages/codeflux/assets/derived/image_52ba2de5.jpg` were removed with `git rm` (staged, not yet committed).
+3. Done: all 19 upstream workflows in `.github/workflows/` were removed with `git rm` (staged). The `triage-*` ones had no repository guard and would have run on a schedule on the default branch. Only `codeflux-release.yml` remains; `.github/actions/setup-bun` stays because the new workflow uses it.
+
+**Release**: `git tag v2.1.4` and `git push origin v2.1.4`, or run the workflow by hand. Builds take roughly 30–60 minutes. Files appear under the repository's Releases page.
+
+**Limits**
+- Nothing in the three builds is signed or notarized. Windows shows SmartScreen ("More info" → "Run anyway"); macOS needs `xattr -cr CodeFlux.app` after extracting the tar. Signing needs a Windows code-signing certificate and an Apple Developer ID, supplied as repository secrets.
+- Only the unpacked Windows app has been run so far. The Windows installer, the Linux packages and the macOS app were not built or run, and the macOS icon conversion is untried; the first workflow run is the first test of them.
+- macOS is Apple Silicon only. An Intel build needs one more matrix entry on `macos-15-intel`.
+- The CLI build downloads the models catalog from `models.opencode.ai` at build time, an upstream service.
+- On a private repository macOS runner minutes cost ten times Linux minutes.
