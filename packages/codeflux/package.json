@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@codeflux/gui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./brand": "./src/brand.ts",
+    "./i18n": "./src/i18n/index.ts",
+    "./logo": "./src/logo/codeflux-logo.tsx",
+    "./wordmark": "./src/logo/codeflux-wordmark.tsx",
+    "./providers": "./src/providers/index.ts",
+    "./model-filter": "./src/providers/model-filter.ts",
+    "./splash": "./src/splash/splash.tsx",
+    "./splash/remove": "./src/splash/remove.ts",
+    "./vite": "./src/vite.js",
+    "./assets/*": "./assets/*"
+  },
+  "scripts": {
+    "icons": "bun run scripts/gen-icons.ts",
+    "test": "bun test",
+    "typecheck": "bun check --no-script",
+    "typecheck:tsc": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode/ui": "workspace:*",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native": "catalog:",
+    "png-to-ico": "3.0.2",
+    "sharp": "0.35.5",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=CodeFlux
+Exec=/opt/CodeFlux/ai.opencode %U
+Terminal=false
+Type=Application
+Icon=ai.opencode
+StartupWMClass=ai.opencode.desktop
+NoDisplay=true
+Comment=AI coding agent
+Categories=Development;

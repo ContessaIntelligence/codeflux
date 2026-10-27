@@ -1,0 +1,19 @@
+.cf-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  line-height: 1.2;
+  color: var(--v2-text-text-base);
+  user-select: none;
+}
+
+.cf-wordmark-logo {
+  width: 1.3em;
+  height: 1.3em;
+  flex: none;
+}
+
+.cf-wordmark-text {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
