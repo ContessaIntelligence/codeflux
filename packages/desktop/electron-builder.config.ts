@@ -187,6 +187,8 @@ const getBase = (appId: string): Configuration => {
     linux: {
       icon: `resources/icons`,
       category: "Development",
+      // fpm (deb/rpm) requires a maintainer email; package.json's author has none.
+      maintainer: "Hongkong CONTESSA INTELLIGENCE TECH LIMITED <support@nousflux.com>",
       executableName: linuxExecutableName(appId),
       // Derive the installed `.desktop` filename from `desktopName`
       // (`ai.opencode.desktop.desktop` for prod) instead of `executableName`,
