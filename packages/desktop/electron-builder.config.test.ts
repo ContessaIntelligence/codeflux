@@ -13,9 +13,9 @@ import { CLI_BINARIES, nodePtyPackage } from "./script/utils"
 const { FileMatcher } = createRequire(import.meta.resolve("electron-builder"))("app-builder-lib/out/fileMatcher")
 
 const channels = [
-  { channel: "dev", appId: "ai.opencode.desktop.dev" },
-  { channel: "beta", appId: "ai.opencode.desktop.beta" },
-  { channel: "prod", appId: "ai.opencode.desktop" },
+  { channel: "dev", appId: "com.nousflux.codeflux.dev" },
+  { channel: "beta", appId: "com.nousflux.codeflux.beta" },
+  { channel: "prod", appId: "com.nousflux.codeflux" },
 ] as const
 
 function load(channel: string, target?: string): Configuration {
@@ -96,7 +96,10 @@ test("shared packaging defaults", async () => {
   expect(config.files).toContain("!resources/opencode-cli*")
   expect(config.extraResources).toEqual([
     { from: "resources/", to: "", filter: ["opencode-cli", "opencode-cli.exe", "opencode-cli.version"] },
+    { from: "../../LICENSE", to: "LICENSE.txt" },
+    { from: "../../NOTICE.md", to: "NOTICE.md" },
   ])
+  expect(config.copyright).toContain("CONTESSA INTELLIGENCE TECH LIMITED")
 })
 
 test("trims external dependencies without excluding runtime files", () => {

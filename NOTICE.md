@@ -1,33 +1,15 @@
 # Notices
 
-CodeFlux is a derivative work of **OpenCode** (https://github.com/anomalyco/opencode), which is distributed under the
-MIT License:
+**CodeFlux** is copyright (c) 2026 Hongkong CONTESSA INTELLIGENCE TECH LIMITED (https://www.nousflux.com). The
+CodeFlux Components are proprietary; see Part 1 of `LICENSE`.
 
-```
-MIT License
+CodeFlux is a derivative work of **OpenCode** (https://github.com/anomalyco/opencode), copyright (c) 2025 opencode,
+which is distributed under the MIT License. The parts that came from OpenCode stay under that license, whose full text
+is Part 2 of `LICENSE`.
 
-Copyright (c) 2025 opencode
+The MIT License covers source code only. The OpenCode name and logo are not licensed by it, so CodeFlux does not use
+them, and OpenCode is not affiliated with CodeFlux. Third-party components keep their own licenses; the in-app
+Settings → About → Third-party notices lists them.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-The MIT License covers the source code only. The OpenCode name and logo are not licensed by it, so CodeFlux does not
-use them. Third-party open source components keep their own licenses; the in-app Settings → About → Notices lists them.
-
-Keep this file and `LICENSE` in every distribution of CodeFlux.
+`LICENSE` and this file must stay in every distribution of CodeFlux. The desktop installer ships them as
+`LICENSE.txt` and `NOTICE.md` in its `resources` folder.

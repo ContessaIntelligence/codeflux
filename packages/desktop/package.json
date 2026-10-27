@@ -3,11 +3,11 @@
   "private": true,
   "version": "2.1.4",
   "type": "module",
-  "license": "MIT",
-  "homepage": "https://opencode.ai",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "homepage": "https://www.nousflux.com",
   "author": {
-    "name": "OpenCode",
-    "email": "hello@opencode.ai"
+    "name": "Hongkong CONTESSA INTELLIGENCE TECH LIMITED",
+    "url": "https://www.nousflux.com"
   },
   "scripts": {
     "typecheck": "bun check --no-script -b",

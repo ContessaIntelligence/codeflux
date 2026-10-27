@@ -15,7 +15,8 @@ export function createDesktopNotify(api: DesktopNotifyAPI): Platform["notify"] {
 
     const notification = new Notification(title, {
       body: description ?? "",
-      icon: "https://opencode.ai/favicon-96x96-v3.png",
+      // The renderer's own bundled icon, resolved against the page, so the notification shows CodeFlux offline.
+      icon: "./favicon-96x96-v3.png",
       silent: true,
     })
 

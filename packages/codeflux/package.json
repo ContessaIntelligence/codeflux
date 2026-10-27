@@ -3,8 +3,9 @@
   "name": "@codeflux/gui",
   "version": "0.1.0",
   "private": true,
+  "author": "Hongkong CONTESSA INTELLIGENCE TECH LIMITED",
   "type": "module",
-  "license": "MIT",
+  "license": "SEE LICENSE IN ../../LICENSE",
   "exports": {
     ".": "./src/index.ts",
     "./brand": "./src/brand.ts",

@@ -1538,6 +1538,7 @@ function ProviderConnection(props: {
           <Match when={isNousFlux && controller.currentMethod()?.type === "key" && controller.auth.state() !== "error"}>
             <NousFluxForm
               locale={language.locale()}
+              fetch={platform.fetch}
               busy={controller.auth.state() === "refreshing"}
               onSubmit={(input) =>
                 controller.auth.connectKey(input.key, { baseURL: input.baseURL, models: input.models }).catch((error) => {

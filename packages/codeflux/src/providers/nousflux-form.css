@@ -1,9 +1,9 @@
 .cf-nousflux {
   display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 0 12px 16px;
+  padding: 0 12px 12px;
   font-size: 13px;
   font-weight: 440;
   line-height: var(--line-height-compact, 16px);
@@ -11,10 +11,32 @@
   color: var(--v2-text-text-muted);
 }
 
+/* The fields scroll inside the dialog, whatever the number of models, and the footer stays in view. */
+.cf-nousflux-scroll {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+.cf-nousflux-footer {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 12px;
+}
+
 .cf-nousflux-image {
   align-self: center;
-  width: min(320px, 70%);
+  width: min(240px, 60%);
   height: auto;
+  flex: none;
   /* The artwork has an opaque white background; round it so it sits on dark surfaces too. */
   border-radius: 12px;
   user-select: none;
@@ -37,4 +59,61 @@
 .cf-nousflux-error {
   font-size: 12px;
   color: var(--v2-state-fg-danger);
+}
+
+.cf-nousflux-models-head,
+.cf-nousflux-models-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cf-nousflux-models-tools {
+  justify-content: flex-start;
+  font-weight: 440;
+  color: var(--v2-text-text-muted);
+}
+
+.cf-nousflux-models-tools span {
+  margin-right: auto;
+}
+
+.cf-nousflux-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--v2-text-text-muted);
+  cursor: pointer;
+  font: inherit;
+}
+
+.cf-nousflux-link:hover,
+.cf-nousflux-link:focus-visible {
+  color: var(--v2-text-text-base);
+  text-decoration: underline;
+  outline: none;
+}
+
+.cf-nousflux-models {
+  display: flex;
+  max-height: 160px;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--v2-border-border-base);
+  border-radius: 8px;
+}
+
+.cf-nousflux-model {
+  font-weight: 440;
+  color: var(--v2-text-text-base);
+  word-break: break-all;
+}
+
+.cf-nousflux-hint {
+  margin: 0;
+  font-weight: 440;
+  color: var(--v2-text-text-muted);
 }

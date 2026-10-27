@@ -40,10 +40,12 @@ function resolveChannel() {
   return "dev"
 }
 
+// CodeFlux's own application identities. Windows groups taskbar buttons, pins and notifications by this id, so
+// sharing OpenCode's would show OpenCode's icon and shortcut for CodeFlux on a machine that has both installed.
 const APP_IDS = {
-  dev: "ai.opencode.desktop.dev",
-  beta: "ai.opencode.desktop.beta",
-  prod: "ai.opencode.desktop",
+  dev: "com.nousflux.codeflux.dev",
+  beta: "com.nousflux.codeflux.beta",
+  prod: "com.nousflux.codeflux",
 } as const
 
 // libappimage (used by AppImageLauncher) resolves the .desktop entry inside an
@@ -101,12 +103,17 @@ const getBase = (appId: string): Configuration => {
       "!**/node_modules/js-yaml/dist/{js-yaml.js,js-yaml.min.js,*.map}",
       "!**/node_modules/js-yaml/bin{,/**/*}",
     ],
+    // Shown in the installer and the executable's file properties.
+    copyright: "Copyright © 2026 Hongkong CONTESSA INTELLIGENCE TECH LIMITED",
     extraResources: [
       {
         from: "resources/",
         to: "",
         filter: ["opencode-cli", "opencode-cli.exe", "opencode-cli.version"],
       },
+      // The license texts travel with every installation, as the MIT License requires for the OpenCode parts.
+      { from: "../../LICENSE", to: "LICENSE.txt" },
+      { from: "../../NOTICE.md", to: "NOTICE.md" },
     ],
     afterPack: async (context) => {
       const arch = Arch[context.arch]

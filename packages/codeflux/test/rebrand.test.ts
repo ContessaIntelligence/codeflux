@@ -14,24 +14,19 @@ test.each([
   expect(brandText(value)).toBe(expected)
 })
 
-test("overrides replace rebranded text, and English overrides cover every locale", () => {
-  const dictionary: Record<string, string> = {
-    "settings.about.trademark": "OpenCode ist eine eingetragene Marke.",
-    "settings.about.description": "OpenCode, der Open-Source-Coding-Agent",
-    "other.key": "OpenCode",
-  }
+test("a dictionary is rebranded and gains the CodeFlux support label", () => {
+  const dictionary: Record<string, string> = { "other.key": "OpenCode", "desktop.menu.app": "OpenCode" }
 
   expect(brandDictionary("de", dictionary)).toEqual({
-    "settings.about.trademark": "CodeFlux is based on OpenCode, which is released under the MIT License.",
-    "settings.about.description": "CodeFlux, an AI coding agent by NousFlux",
-    // An override also supplies a key the locale's dictionary lacks.
-    "settings.about.website": "www.nousflux.com",
     "other.key": "CodeFlux",
+    "desktop.menu.app": "CodeFlux",
+    "desktop.menu.codefluxSupport": "CodeFlux Support",
   })
 })
 
 test("a locale's own override wins over the English one", () => {
-  expect(brandDictionary("zh", { "settings.about.description": "x" })["settings.about.description"]).toBe(
-    "CodeFlux，NousFlux 出品的 AI 编程助手",
-  )
+  const empty: Record<string, string> = {}
+
+  expect(brandDictionary("zh", empty)["desktop.menu.codefluxSupport"]).toBe("CodeFlux 支持")
+  expect(brandDictionary("zht", empty)["desktop.menu.codefluxSupport"]).toBe("CodeFlux 支援")
 })

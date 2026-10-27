@@ -2216,3 +2216,50 @@
   [data-slot="tabs-v2-trigger"] {
   padding-inline: 8px;
 }
+
+/* CodeFlux's own details sit on top; the OpenCode notice the MIT License asks for is small text at the bottom. */
+.settings-about-brand,
+.settings-about-company {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-about-logo {
+  width: 72px;
+  height: 72px;
+  user-select: none;
+}
+
+.settings-about-name {
+  margin: 0;
+  color: var(--v2-text-text-base);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.settings-about-company {
+  color: var(--v2-text-text-base);
+}
+
+.settings-about-opensource {
+  display: flex;
+  max-width: 440px;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 32px;
+  color: var(--v2-text-text-faint);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.settings-about-opensource h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 530;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

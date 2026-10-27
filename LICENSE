@@ -1,6 +1,88 @@
+CodeFlux License
+================
+
+Copyright (c) 2026 Hongkong CONTESSA INTELLIGENCE TECH LIMITED. All rights reserved.
+
+This file has two parts:
+
+  Part 1 - the CodeFlux Proprietary License, which covers the CodeFlux Components.
+  Part 2 - the MIT License of OpenCode, which covers the OpenCode Components and must stay with them.
+
+
+PART 1 - CODEFLUX PROPRIETARY LICENSE
+-------------------------------------
+
+1. Owner
+
+   "CodeFlux" is owned by Hongkong CONTESSA INTELLIGENCE TECH LIMITED (the "Owner"), including its copyright in the
+   CodeFlux Components. Website: https://www.nousflux.com
+
+2. CodeFlux Components
+
+   "CodeFlux Components" means everything the Owner created or changed in this repository and in the software built
+   from it, namely:
+
+   (a) the directories `packages/codeflux` and `packages/codeflux-provider`;
+   (b) the CodeFlux name, logos, images, icons and splash screens (including `codeflux-logo.png`,
+       `codeflux-screen.png` and the files generated from them), and the NousFlux integration;
+   (c) the Owner's changes to files that came from OpenCode, to the extent they are the Owner's own work; and
+   (d) the compiled CodeFlux application and installers.
+
+   The CodeFlux Components do not include the OpenCode Components or any Third-Party Components.
+
+3. Rights
+
+   All rights in the CodeFlux Components are reserved. Except as the Owner allows in a separate written agreement or
+   in the terms under which the Owner supplies the software to you, you may not copy, modify, merge, publish,
+   distribute, sublicense, sell, rent, lease, reverse engineer or create derivative works of the CodeFlux Components,
+   or make them available to a third party.
+
+   A person who has received a copy of the compiled CodeFlux application from the Owner or from an authorized
+   distributor may install and use it for their own purposes, subject to this License and any agreement that came
+   with it.
+
+4. Trademarks
+
+   CodeFlux, NousFlux, and their logos are marks of the Owner. This License gives no right to use them. Nothing here
+   gives a right to use the name or logo of OpenCode or of any other third party.
+
+5. OpenCode and third-party software
+
+   CodeFlux is based on OpenCode (https://github.com/anomalyco/opencode), which is released under the MIT License
+   reproduced in Part 2. Parts of CodeFlux that came from OpenCode remain under that license, whatever this Part says.
+   CodeFlux also contains and depends on software from other parties, each under its own license; the in-app
+   Settings > About > Third-party notices lists them. Nothing in this License limits the rights those licenses give
+   you for that software.
+
+6. No warranty
+
+   THE CODEFLUX COMPONENTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING THE
+   WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+7. Limitation of liability
+
+   TO THE FULLEST EXTENT THE LAW ALLOWS, THE OWNER IS NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL OR
+   CONSEQUENTIAL DAMAGES, OR FOR LOSS OF DATA OR PROFITS, ARISING OUT OF THE USE OF OR INABILITY TO USE THE CODEFLUX
+   COMPONENTS.
+
+8. Termination
+
+   Any right granted to you by this License ends automatically if you breach it. On termination you must stop using
+   and delete the CodeFlux Components.
+
+9. Contact
+
+   Hongkong CONTESSA INTELLIGENCE TECH LIMITED - https://www.nousflux.com
+
+
+PART 2 - OPENCODE MIT LICENSE
+-----------------------------
+
+The following notice applies to the parts of this software that came from OpenCode and is reproduced as the MIT
+License requires.
+
 MIT License
 
-Copyright (c) 2026 NousFlux (CodeFlux modifications)
 Copyright (c) 2025 opencode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
