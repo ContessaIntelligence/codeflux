@@ -1,12 +1,12 @@
 /** Product identity. Everything user-visible that names the product reads from here. */
 export const BRAND = {
   name: "CodeFlux",
-  company: "NousFlux",
+  company: "Routok",
   /** Opened by Help → CodeFlux Support. */
-  supportURL: "https://www.nousflux.com",
-  /** Where the NousFlux connection form points until the user edits it. */
-  nousfluxURL: "https://www.nousflux.com",
+  supportURL: "https://www.routok.com",
+  /** Where the CodeFlux connection form points until the user edits it. */
+  nousfluxURL: "https://www.routok.com",
   /** Integration and provider ID registered by `@codeflux/provider-nousflux`. */
   nousfluxID: "nousflux",
-  nousfluxName: "NousFlux",
+  nousfluxName: "CodeFlux",
 } as const

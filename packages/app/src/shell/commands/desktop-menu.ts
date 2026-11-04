@@ -272,7 +272,7 @@ export const DESKTOP_MENU: DesktopMenu[] = [
     id: "help",
     labelKey: "desktop.menu.help",
     items: [
-      { type: "item", labelKey: "desktop.menu.codefluxSupport", href: "https://www.nousflux.com" },
+      { type: "item", labelKey: "desktop.menu.codefluxSupport", href: "https://www.routok.com" },
       { type: "item", labelKey: "desktop.menu.exportLogs", command: "logs.export" },
     ],
   },

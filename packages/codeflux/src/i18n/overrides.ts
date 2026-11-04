@@ -5,11 +5,15 @@
 export const overrides: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   en: {
     "desktop.menu.codefluxSupport": "CodeFlux Support",
+    // The first-launch default project is a fixed folder name, so every locale creates the same directory.
+    "desktop.onboarding.defaultProject": "myproject",
   },
   zh: {
     "desktop.menu.codefluxSupport": "CodeFlux 支持",
+     "desktop.onboarding.defaultProject": "我的项目",
   },
   zht: {
     "desktop.menu.codefluxSupport": "CodeFlux 支援",
+    "desktop.onboarding.defaultProject": "我的項目",
   },
 }

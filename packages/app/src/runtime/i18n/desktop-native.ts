@@ -299,7 +299,7 @@ export const DESKTOP_NATIVE_ENGLISH = {
   "desktop.dialog.chooseFile": "Choose a file",
   "desktop.dialog.saveFile": "Save file",
   "desktop.dialog.files": "Files",
-  "desktop.onboarding.defaultProject": "Default Project",
+  "desktop.onboarding.defaultProject": "myproject",
 
   "desktop.picker.error.notSelected": "File was not selected by the picker",
   "desktop.picker.error.sizeLimit": "Selected attachments exceed the {{limit}} MB limit",

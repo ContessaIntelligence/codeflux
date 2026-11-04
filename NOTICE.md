@@ -1,6 +1,6 @@
 # Notices
 
-**CodeFlux** is copyright (c) 2026 Hongkong CONTESSA INTELLIGENCE TECH LIMITED (https://www.nousflux.com). The
+**CodeFlux** is copyright (c) 2026 Hongkong CONTESSA INTELLIGENCE TECH LIMITED (https://www.routok.com). The
 CodeFlux Components are proprietary; see Part 1 of `LICENSE`.
 
 CodeFlux is a derivative work of **OpenCode** (https://github.com/anomalyco/opencode), copyright (c) 2025 opencode,

@@ -4,9 +4,9 @@ import { brandDictionary, brandText } from "../src/i18n"
 test.each([
   { value: "OpenCode connected", expected: "CodeFlux connected" },
   { value: "Open OpenCode, then OpenCode Go", expected: "Open CodeFlux, then CodeFlux Go" },
-  // Commands, files, URLs and environment variables are not brand mentions.
+  // Commands, URLs and environment variables are not brand mentions; the config file name is renamed in copy.
   { value: "Run opencode pair", expected: "Run opencode pair" },
-  { value: "Manage in opencode.json", expected: "Manage in opencode.json" },
+  { value: "Manage in opencode.json", expected: "Manage in codeflux.json" },
   { value: "Use $OPENCODE_WORKTREE_BASE", expected: "Use $OPENCODE_WORKTREE_BASE" },
   { value: "https://opencode.ai/docs", expected: "https://opencode.ai/docs" },
   { value: "MyOpenCodeThing", expected: "MyOpenCodeThing" },
@@ -14,13 +14,14 @@ test.each([
   expect(brandText(value)).toBe(expected)
 })
 
-test("a dictionary is rebranded and gains the CodeFlux support label", () => {
+test("a dictionary is rebranded and gains the English overrides", () => {
   const dictionary: Record<string, string> = { "other.key": "OpenCode", "desktop.menu.app": "OpenCode" }
 
   expect(brandDictionary("de", dictionary)).toEqual({
     "other.key": "CodeFlux",
     "desktop.menu.app": "CodeFlux",
     "desktop.menu.codefluxSupport": "CodeFlux Support",
+    "desktop.onboarding.defaultProject": "myproject",
   })
 })
 

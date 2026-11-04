@@ -1,9 +1,9 @@
 /** Provider identity and the pure helpers that turn a NousFlux connection form into provider settings. */
 export const NOUSFLUX_ID = "nousflux"
 
-export const NOUSFLUX_NAME = "NousFlux"
+export const NOUSFLUX_NAME = "CodeFlux"
 
-export const NOUSFLUX_DEFAULT_URL = "https://www.nousflux.com"
+export const NOUSFLUX_DEFAULT_URL = "https://www.routok.com"
 
 /** NousFlux speaks the OpenAI chat-completions protocol. */
 export const OPENAI_COMPATIBLE_PACKAGE = "@opencode/ai/providers/openai-compatible"

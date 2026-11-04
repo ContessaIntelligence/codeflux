@@ -4,10 +4,10 @@
   "version": "2.1.4",
   "type": "module",
   "license": "SEE LICENSE IN ../../LICENSE",
-  "homepage": "https://www.nousflux.com",
+  "homepage": "https://www.routok.com",
   "author": {
     "name": "Hongkong CONTESSA INTELLIGENCE TECH LIMITED",
-    "url": "https://www.nousflux.com"
+    "url": "https://www.routok.com"
   },
   "scripts": {
     "typecheck": "bun check --no-script -b",

@@ -16,7 +16,7 @@ const fields = Form.Fields.make([
   {
     type: "string",
     key: "baseURL",
-    title: "NousFlux URL",
+    title: "CodeFlux URL",
     placeholder: NOUSFLUX_DEFAULT_URL,
     default: NOUSFLUX_DEFAULT_URL,
     required: true,

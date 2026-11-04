@@ -21,7 +21,7 @@ const xml = `<?xml version="1.0" encoding="UTF-8"?>
   <summary>${summary}</summary>
 
   <developer id="com.nousflux">
-    <name>NousFlux</name>
+    <name>CodeFlux</name>
   </developer>
 
   <description>
@@ -34,7 +34,7 @@ const xml = `<?xml version="1.0" encoding="UTF-8"?>
 
   <content_rating type="oars-1.1" />
 
-  <url type="homepage">https://www.nousflux.com</url>
+  <url type="homepage">https://www.routok.com</url>
   <url type="vcs-browser">https://github.com/anomalyco/opencode</url>
 </component>
 `
