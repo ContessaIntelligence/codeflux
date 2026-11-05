@@ -86,9 +86,10 @@ jobs:
           OPENCODE_CHANNEL: prod
           # fetch-llama.ts bundles llama.cpp's llama-server (the local CodeFlux-4B model) on every platform. The tag is
           # pinned so all three builds ship the same, tested llama.cpp; bump it deliberately. The token avoids the
-          # anonymous GitHub API rate limit.
+          # anonymous GitHub API rate limit. It must NOT be named GITHUB_TOKEN or GH_TOKEN here: electron-builder
+          # reads those, assumes a GitHub publish target and crashes while writing the deb/rpm update info.
           LLAMA_CPP_TAG: b12119
-          GITHUB_TOKEN: ${{ github.token }}
+          LLAMA_GITHUB_TOKEN: ${{ github.token }}
 
       # `pack` leaves the unpacked app on Windows; the installer is built around that app in a second pass.
       - name: Build Windows installer

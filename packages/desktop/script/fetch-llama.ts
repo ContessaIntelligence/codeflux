@@ -32,7 +32,9 @@ const api = async (url: string) => {
   const response = await fetch(url, {
     headers: {
       Accept: "application/vnd.github+json",
-      ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
+      // Deliberately not GITHUB_TOKEN or GH_TOKEN: electron-builder (which `pack` runs next) reads those and then
+      // assumes a GitHub publish target, which fails in CI when it cannot detect the repository.
+      ...(process.env.LLAMA_GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.LLAMA_GITHUB_TOKEN}` } : {}),
     },
   })
 
