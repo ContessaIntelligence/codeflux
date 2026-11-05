@@ -3,6 +3,7 @@ export { brandDictionary, brandText, text, type TextKey } from "./i18n"
 export { CodeFluxLogo } from "./logo/codeflux-logo"
 export {
   CodeFluxProviderPicker,
+  type CodeFluxAccount,
   LocalModelForm,
   type LocalRpcClient,
   type LocalSubmit,

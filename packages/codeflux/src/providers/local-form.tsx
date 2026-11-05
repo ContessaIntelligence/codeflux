@@ -22,7 +22,7 @@ export type LocalProgress = {
 /** The renderer-side shape of the `codeflux.local` RPC client; the app builds it with `sdk.api.rpc(LocalRpc)`. */
 export type LocalRpcClient = {
   probe: (input: Record<string, never>) => Promise<{ runtime: boolean; model: boolean; sizeBytes: number }>
-  setup: (input: Record<string, never>) => Promise<{ state: "started" | "joined" }>
+  setup: (input: Record<string, never>) => Promise<{ state: "started" | "joined" | "unlicensed" }>
   cancel: (input: Record<string, never>) => Promise<{ cancelled: boolean }>
   events: {
     on: (name: "progress", handler: (event: { data: LocalProgress }) => void) => () => void
@@ -76,7 +76,10 @@ export function LocalModelForm(props: {
   const start = async () => {
     setForm({ stage: "starting", running: true, failure: undefined, received: 0, size: 0, speed: 0 })
     try {
-      await props.rpc.setup({})
+      const result = await props.rpc.setup({})
+      if (result.state === "unlicensed") {
+        setForm({ stage: "error", running: false, failure: t("local.error.unlicensed") })
+      }
     } catch (cause) {
       setForm({ stage: "error", running: false, failure: t("local.error.failed", { error: describe(cause) }) })
     }

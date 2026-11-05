@@ -3,7 +3,17 @@ import { define } from "@opencode/plugin/effect/plugin"
 import { Form } from "@opencode/schema/form"
 import { Integration } from "@opencode/schema/integration"
 import { Model } from "@opencode/schema/model"
-import { normalizeBaseURL, OPENAI_COMPATIBLE_PACKAGE, parseModels } from "./settings.js"
+import { hasBlankBaseURL, normalizeBaseURL, OPENAI_COMPATIBLE_PACKAGE, parseModels } from "./settings.js"
+import {
+  accountView,
+  beginSignIn,
+  isLicensed,
+  loadAccount,
+  onAccountChange,
+  refreshAccount,
+  REFRESH_EVERY_MS,
+  signOutAccount,
+} from "./account.js"
 import {
   cancelDownload,
   downloadModel,
@@ -57,6 +67,8 @@ export const CodeFluxLocalPlugin = define({
       typeof input === "string" && input.trim() !== "" ? normalizeBaseURL(input) : LOCAL_DEFAULT_BASE_URL
 
     const loaded = { baseURL: LOCAL_DEFAULT_BASE_URL, models: [] as string[] }
+    // The repair below runs once per process: if it did not stick, repeating it would only pile up credentials.
+    let repaired = false
 
     const sync = Effect.fn("CodeFluxLocalPlugin.sync")(function* () {
       const connection = yield* ctx.integration.connection.active(LOCAL_ID)
@@ -64,7 +76,29 @@ export const CodeFluxLocalPlugin = define({
         ? yield* ctx.integration.connection.resolve(connection).pipe(Effect.orElseSucceed(() => undefined))
         : undefined
       const metadata = credential?.type === "key" ? credential.metadata : undefined
-      const next = { baseURL: localBaseURL(metadata?.baseURL), models: parseModels(metadata?.models) }
+
+      // An earlier build saved this connection with a blank baseURL, which overrides the provider's own endpoint and
+      // fails every request with "requires an endpoint baseURL". Connect again with the real endpoint: the new
+      // credential becomes the active one, and the credential event brings this sync back with it.
+      if (hasBlankBaseURL(metadata) && !repaired) {
+        repaired = true
+        const models = parseModels(metadata?.models).join(",") || LOCAL_MODEL
+        yield* Effect.logInfo("codeflux.local: repairing a saved connection with a blank baseURL")
+        yield* ctx.integration.connect
+          .key({
+            integrationID: Integration.ID.make(LOCAL_ID),
+            key: "local",
+            answer: { baseURL: LOCAL_DEFAULT_BASE_URL, models },
+          })
+          .pipe(Effect.orElseSucceed(() => undefined))
+      }
+
+      // The license is read when a connection is (re)loaded. Expiring mid-session keeps the connected model usable
+      // until the next launch, but a reconnect after expiry is refused.
+      const next = {
+        baseURL: localBaseURL(metadata?.baseURL),
+        models: isLicensed() ? parseModels(metadata?.models) : [],
+      }
 
       if (next.baseURL === loaded.baseURL && next.models.join() === loaded.models.join()) return
       Object.assign(loaded, next)
@@ -73,7 +107,7 @@ export const CodeFluxLocalPlugin = define({
 
     // Brings the server up for an existing connection, and follows the port when the saved one was taken.
     const resume = Effect.fn("CodeFluxLocalPlugin.resume")(function* () {
-      if (loaded.models.length === 0 || activeRun || !hasRuntime() || !hasModel()) return
+      if (loaded.models.length === 0 || activeRun || !hasRuntime() || !hasModel() || !isLicensed()) return
       const saved = Number(URL.parse(loaded.baseURL)?.port) || LOCAL_DEFAULT_PORT
       const server = yield* Effect.promise(() => ensureServer(saved))
 
@@ -83,6 +117,25 @@ export const CodeFluxLocalPlugin = define({
       if (baseURL === loaded.baseURL) return
       loaded.baseURL = baseURL
       yield* ctx.provider.reload()
+    })
+
+    // The customer's "Restart service": stops the local model server and starts it again for the saved connection. The
+    // killed server can hold its port for a moment, so the new one may come up on the next port; the provider follows.
+    const restart = Effect.fn("CodeFluxLocalPlugin.restart")(function* () {
+      if (!isLicensed()) return { state: "unlicensed" as const }
+      if (activeRun) return { state: "busy" as const }
+      if (!hasRuntime() || !hasModel()) return { state: "not-installed" as const }
+
+      stopServer()
+      yield* sync()
+      const saved = Number(URL.parse(loaded.baseURL)?.port) || LOCAL_DEFAULT_PORT
+      const server = yield* Effect.promise(() => ensureServer(saved))
+
+      if (typeof server === "string") return { state: "failed" as const, failure: server }
+      loaded.baseURL = localBaseURL(server.origin)
+      yield* ctx.provider.reload()
+
+      return { state: "restarted" as const }
     })
 
     yield* ctx.integration.transform((editor) => {
@@ -121,6 +174,7 @@ export const CodeFluxLocalPlugin = define({
           Effect.succeed({ runtime: hasRuntime(), model: hasModel(), sizeBytes: MODEL.approximateSize }),
         setup: () =>
           Effect.sync(() => {
+            if (!isLicensed()) return { state: "unlicensed" as const }
             if (activeRun) return { state: "joined" as const }
             activeRun = true
             // Detached from the request fiber: the run outlives this RPC and reports through progress events.
@@ -129,8 +183,15 @@ export const CodeFluxLocalPlugin = define({
             return { state: "started" as const }
           }),
         cancel: () => Effect.succeed({ cancelled: cancelDownload() }),
+        restart: () => restart(),
+        account: () => Effect.sync(accountView),
+        signIn: () => Effect.promise(beginSignIn).pipe(Effect.map((url) => ({ url }))),
+        signOut: () => Effect.promise(signOutAccount).pipe(Effect.as({})),
       })
       .pipe(Effect.orDie)
+
+    const off = onAccountChange(() => Effect.runFork(registration.events.emit("account", accountView())))
+    yield* Effect.addFinalizer(() => Effect.sync(off))
 
     /** The whole setup, from the model download to the ready endpoint, reporting every step as `progress` events. */
     const workflow = Effect.fn("CodeFluxLocalPlugin.run")(function* () {
@@ -197,8 +258,15 @@ export const CodeFluxLocalPlugin = define({
 
     launch = () => workflow()
 
+    // The saved session is read before the connection, so the launch-time license decides which models load.
+    yield* Effect.promise(() => loadAccount().catch(() => undefined))
     yield* sync()
     yield* resume().pipe(Effect.forkScoped({ startImmediately: true }))
+    yield* Effect.promise(refreshAccount).pipe(
+      Effect.andThen(Effect.sleep(REFRESH_EVERY_MS)),
+      Effect.forever,
+      Effect.forkScoped({ startImmediately: true }),
+    )
     yield* ctx.event
       .subscribe({ types: ["credential.updated", "credential.switched"] })
       .pipe(Stream.runForEach(() => sync().pipe(Effect.andThen(resume()))), Effect.forkScoped({ startImmediately: true }))

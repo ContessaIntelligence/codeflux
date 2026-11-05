@@ -1,6 +1,7 @@
 import { DialogBody, DialogHeader, DialogTitle, Dialog } from "@opencode/ui/dialog"
 import { useDialog } from "@opencode/ui/context/dialog"
 import { CodeFluxProviderPicker } from "@codeflux/gui/providers"
+import { useCodeFluxAccount } from "../codeflux-account"
 import type { Component } from "solid-js"
 import { useLocal, type ModelSelection } from "@/providers/models/selection"
 import { decode64 } from "@/runtime/persistence/base64"
@@ -16,6 +17,7 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
   const dialog = useDialog()
   const directory = () => decode64(local.slug())
   const language = useLanguage()
+  const codeflux = useCodeFluxAccount()
 
   const openProviders = (provider?: string) => {
     void import("@/providers/connect/dialog").then((x) => {
@@ -37,7 +39,14 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
         <DialogTitle>{language.t("dialog.model.select.title")}</DialogTitle>
       </DialogHeader>
       <DialogBody class="max-h-[calc(100vh_-_68px)] min-h-0 flex-none gap-0 overflow-y-auto px-2 pb-2">
-        <CodeFluxProviderPicker locale={language.locale()} onSelect={openProviders} />
+        <CodeFluxProviderPicker
+          locale={language.locale()}
+          onSelect={openProviders}
+          account={codeflux.account()}
+          onSignIn={() => void codeflux.signIn()}
+          onSignOut={() => void codeflux.signOut()}
+          onOpenSite={codeflux.openSite}
+        />
       </DialogBody>
     </Dialog>
   )

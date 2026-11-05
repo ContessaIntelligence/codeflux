@@ -233,7 +233,7 @@ Repository: `https://github.com/ContessaIntelligence/codeflux`, default branch `
 | `ubuntu-24.04` | `CodeFlux-linux-x86_64.AppImage`, `.deb`, `.rpm` (names follow electron-builder's `${arch}`) |
 | `macos-15` (Apple Silicon) | `CodeFlux-mac-arm64.app.tar` |
 
-The upstream scripts keep their `opencode-desktop-*` file names; the workflow renames the files to `CodeFlux-*` when collecting them, so no local script changed for this.
+The desktop build names its files `codeflux-desktop-*` (`artifactName` in `electron-builder.config.ts`, the copies in `script/pack.ts`); the workflow renames them to `CodeFlux-*` when collecting them.
 
 **Change to a local build file**: `packages/desktop/electron-builder.config.ts` now points `mac.icon` at `icon.png` (512×512) so electron-builder generates the macOS icon; the checked-in `icon.icns` is still OpenCode's. Nothing else in the local build flow changes; section 5 still works as before.
 
