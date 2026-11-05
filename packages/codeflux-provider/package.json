@@ -1,13 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@codeflux/provider-nousflux",
+  "name": "@codeflux/provider-codeflux",
   "version": "0.1.0",
   "private": true,
   "author": "Hongkong CONTESSA INTELLIGENCE TECH LIMITED",
   "type": "module",
   "license": "SEE LICENSE IN ../../LICENSE",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./local": "./src/local-rpc.ts"
   },
   "scripts": {
     "test": "bun test",

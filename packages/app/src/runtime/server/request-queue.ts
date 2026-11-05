@@ -25,6 +25,14 @@ const requestHeadersTimeoutMs = 60_000
 // kills the script midway and leaves a registered but half-initialised worktree behind.
 const setupRequestHeadersTimeoutMs = 10 * 60_000
 
+// Installing the local model downloads gigabytes (Ollama plus qwen3:4b) before the setup RPC answers,
+// so it needs an even larger budget; the progress events stream through the event endpoint meanwhile.
+const localModelSetupHeadersTimeoutMs = 30 * 60_000
+
+function isLocalModelSetupRequest(method: string, pathname: string) {
+  return method === "POST" && pathname === "/api/rpc/codeflux.local/setup"
+}
+
 function isSlowRequest(pathname: string) {
   return slowRequestPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
 }
@@ -149,7 +157,11 @@ export function createRequestQueue(input: {
 
       const timer = setTimeout(
         () => controller.abort(new DOMException("Timed out waiting for the server to respond", "TimeoutError")),
-        isSetupRequest(request.method, pathname) ? setupHeadersTimeoutMs : headersTimeoutMs,
+        isLocalModelSetupRequest(request.method, pathname)
+          ? localModelSetupHeadersTimeoutMs
+          : isSetupRequest(request.method, pathname)
+            ? setupHeadersTimeoutMs
+            : headersTimeoutMs,
       )
 
       return base(new Request(request, { signal: controller.signal })).finally(() => {

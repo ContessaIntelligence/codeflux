@@ -6,7 +6,9 @@ export const BRAND = {
   supportURL: "https://www.routok.com",
   /** Where the CodeFlux connection form points until the user edits it. */
   nousfluxURL: "https://www.routok.com",
-  /** Integration and provider ID registered by `@codeflux/provider-nousflux`. */
+  /** Integration and provider ID registered by `@codeflux/provider-codeflux`. */
   nousfluxID: "nousflux",
   nousfluxName: "CodeFlux",
+  /** Integration and provider ID of the local model (qwen3:4b through Ollama). */
+  localID: "codeflux-4b",
 } as const

@@ -12,13 +12,14 @@ const tiles = [
 ] as const
 
 /**
- * The provider list: one NousFlux banner above OpenAI, Anthropic and Google. It replaces the searchable catalog, so
- * a click only reports the integration ID and the caller starts the connection.
+ * The provider list: the CodeFlux local-model banner (the default, with the CodeFlux logo) above OpenAI, Anthropic
+ * and Google tiles; the CodeFlux cloud provider tile is hidden for now. The picker replaces the searchable catalog,
+ * so a click only reports the integration ID and the caller starts the connection.
  */
 export function CodeFluxProviderPicker(props: { locale: string; onSelect: (id: string) => void; onPrepare?: () => void }) {
-  let banner: HTMLButtonElement | undefined
+  let local: HTMLButtonElement | undefined
 
-  onMount(() => banner?.focus({ preventScroll: true }))
+  onMount(() => local?.focus({ preventScroll: true }))
 
   const choose = (id: string) => {
     props.onPrepare?.()
@@ -28,18 +29,19 @@ export function CodeFluxProviderPicker(props: { locale: string; onSelect: (id: s
   return (
     <div data-component="codeflux-provider-picker" class="cf-picker">
       <button
-        ref={banner}
+        ref={local}
         type="button"
-        data-provider-id={BRAND.nousfluxID}
+        data-provider-id={BRAND.localID}
         class="cf-picker-banner"
-        onClick={() => choose(BRAND.nousfluxID)}
+        onClick={() => choose(BRAND.localID)}
       >
         <CodeFluxLogo class="cf-picker-banner-logo" />
         <span class="cf-picker-banner-text">
-          <span class="cf-picker-banner-name">{BRAND.nousfluxName}</span>
-          <span class="cf-picker-banner-tagline">{text(props.locale, "picker.nousflux.tagline")}</span>
+          <span class="cf-picker-banner-name">{text(props.locale, "picker.local.name")}</span>
+          <span class="cf-picker-banner-tagline">{text(props.locale, "picker.local.tagline")}</span>
         </span>
       </button>
+      {/* The CodeFlux cloud provider tile stays hidden for now. */}
       <div class="cf-picker-row">
         <For each={tiles}>
           {(tile) => (

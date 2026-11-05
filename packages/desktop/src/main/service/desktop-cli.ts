@@ -146,19 +146,17 @@ const installCli = Effect.fn("DesktopCli.install")(function* (source: string, ve
 
   if (existsSync(destination)) {
     yield* Effect.logInfo("v2 CLI staged executable reused", { path: destination, version })
+  } else {
+    const temp = destination + `.${process.pid}.tmp`
+    yield* fs.makeDirectory(directory, { recursive: true })
+    yield* fs.copyFile(source, temp)
 
-    return destination
+    if (process.platform !== "win32") yield* fs.chmod(temp, 0o755)
+    yield* fs
+      .rename(temp, destination)
+      .pipe(Effect.catch((error) => fs.remove(temp, { force: true }).pipe(Effect.andThen(Effect.fail(error)))))
+    yield* Effect.logInfo("v2 CLI executable staged", { source, path: destination, version })
   }
-
-  const temp = destination + `.${process.pid}.tmp`
-  yield* fs.makeDirectory(directory, { recursive: true })
-  yield* fs.copyFile(source, temp)
-
-  if (process.platform !== "win32") yield* fs.chmod(temp, 0o755)
-  yield* fs
-    .rename(temp, destination)
-    .pipe(Effect.catch((error) => fs.remove(temp, { force: true }).pipe(Effect.andThen(Effect.fail(error)))))
-  yield* Effect.logInfo("v2 CLI executable staged", { source, path: destination, version })
 
   return destination
 })

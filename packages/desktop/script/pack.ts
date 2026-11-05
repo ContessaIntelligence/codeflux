@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { $ } from "bun"
-import { cp, mkdir, readdir, rm } from "node:fs/promises"
+import { cp, mkdir, readdir, rm, stat } from "node:fs/promises"
 import path from "node:path"
 import { getCurrentCli, resolveChannel } from "./utils"
 
@@ -24,6 +24,10 @@ const app = process.env.OPENCODE_DESKTOP_APP
 const flags = [`--${os}`, `--${cli.cpu}`, "--publish", "never", "--config", "electron-builder.config.ts"]
 
 process.chdir(dir)
+
+// Every platform bundles llama.cpp's llama-server for the local CodeFlux-4B model (the second Windows pass, with an
+// already packed app, has it in there already).
+if (!app) await $`bun ./script/fetch-llama.ts`
 
 await rm("dist", { recursive: true, force: true })
 
@@ -50,6 +54,22 @@ if (!app && os === "mac") {
   const bundles = (await readdir(parent)).filter((file) => file.endsWith(".app"))
 
   if (bundles.length !== 1) throw new Error(`Expected one .app bundle in ${parent}, found ${bundles.join(", ")}`)
+  // identity=null leaves the bundle with Electron's original signatures, which editing Info.plist and adding
+  // resources invalidated. Apple Silicon reports such an app as "damaged". Re-sign everything ad hoc so the seal
+  // is at least consistent; only a Developer ID signature plus notarization removes the Gatekeeper prompt.
+  // --deep only signs code in the bundle's code locations, not the llama.cpp executables and libraries under
+  // Resources/llama. Apple Silicon kills unsigned arm64 code, so each real file there is signed ad hoc first.
+  const llama = path.join(parent, bundles[0], "Contents", "Resources", "llama")
+
+  for (const entry of await readdir(llama, { withFileTypes: true })) {
+    const file = path.join(llama, entry.name)
+
+    if (entry.isFile() && (entry.name.endsWith(".dylib") || ((await stat(file)).mode & 0o111) !== 0))
+      await $`codesign --force --sign - ${file}`
+  }
+
+  await $`codesign --force --deep --sign - ${path.join(parent, bundles[0])}`
+  await $`codesign --verify --deep --strict ${path.join(parent, bundles[0])}`
   await $`tar -cf ${path.join(out, `opencode-desktop-mac-${cli.cpu}.app.tar`)} -C ${parent} ${bundles[0]}`
 }
 

@@ -8,6 +8,9 @@ type Catalog<Provider extends { models: Record<string, { cost?: { input: number 
 /** The keyless OpenCode catalog: models of the `opencode` provider that cost nothing. */
 const FREE_PROVIDER = "opencode"
 
+/** The raw Ollama provider: local models surface as CodeFlux-4B instead. */
+const RAW_LOCAL_PROVIDER = "ollama"
+
 /**
  * Drops the free OpenCode models from a provider catalog. CodeFlux does not offer them, so no picker, setting or
  * default model should see them. A paid model of the same provider (a Zen key) stays, and a provider left without
@@ -32,6 +35,24 @@ export function withoutFreeCatalog<Provider extends { models: Record<string, { c
     default: Object.fromEntries(
       Object.entries(catalog.default).filter(([id, model]) => id !== FREE_PROVIDER || model in paid),
     ),
+    connected: catalog.connected.filter((id) => all.has(id)),
+  }
+}
+
+/**
+ * Drops the raw Ollama provider from a catalog. CodeFlux presents the local Ollama endpoint as its own CodeFlux-4B
+ * provider, so the unbranded duplicate never reaches a picker, setting or default model.
+ */
+export function withoutRawOllama<Provider extends { models: Record<string, { cost?: { input: number } }> }>(
+  catalog: Catalog<Provider>,
+): Catalog<Provider> {
+  if (!catalog.all.has(RAW_LOCAL_PROVIDER)) return catalog
+  const all = new Map(catalog.all)
+  all.delete(RAW_LOCAL_PROVIDER)
+
+  return {
+    all,
+    default: Object.fromEntries(Object.entries(catalog.default).filter(([id]) => id !== RAW_LOCAL_PROVIDER)),
     connected: catalog.connected.filter((id) => all.has(id)),
   }
 }

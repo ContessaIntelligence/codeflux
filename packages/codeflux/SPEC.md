@@ -7,11 +7,11 @@ CodeFlux is a rebrand and extension of OpenCode 2.1.4 (MIT). New work lives in t
 | Path | Role |
 |---|---|
 | `packages/codeflux` (`@codeflux/gui`) | Brand constants, dictionary rebranding, logo/wordmark, splash, provider picker, NousFlux form and model loading, free-model filter, Vite plugin, icon script, this SPEC |
-| `packages/codeflux-provider` (`@codeflux/provider-nousflux`) | Core plugin that registers the `nousflux` integration and an OpenAI-compatible provider |
+| `packages/codeflux-provider` (`@codeflux/provider-codeflux`) | Core plugins that register the `nousflux` integration with an OpenAI-compatible provider, and the local `codeflux-4b` provider with the `codeflux.local` setup RPC (`./local` exports the schema for the renderer) |
 
-`@codeflux/gui` depends on Solid and `@opencode/ui` only. `@codeflux/provider-nousflux` depends on `@opencode/plugin` and `@opencode/schema` only. Core imports the plugin in one line.
+`@codeflux/gui` depends on Solid and `@opencode/ui` only. `@codeflux/provider-codeflux` depends on `@opencode/plugin` and `@opencode/schema` only. Core imports the plugin in one line.
 
-Layout of `packages/codeflux`: `assets/` (source and derived images), `src/brand.ts`, `src/i18n/{rebrand,overrides,text,index}.ts`, `src/logo/`, `src/splash/`, `src/providers/{picker,nousflux-form,models,model-filter}`, `src/vite.js`, `scripts/gen-icons.ts`, `test/`.
+Layout of `packages/codeflux`: `assets/` (source and derived images), `src/brand.ts`, `src/i18n/{rebrand,overrides,text,index}.ts`, `src/logo/`, `src/splash/`, `src/providers/{picker,local-form,nousflux-form,models,model-filter}`, `src/vite.js`, `scripts/gen-icons.ts`, `test/`.
 
 ## 2. Images
 
@@ -28,7 +28,8 @@ Regenerate from `packages/codeflux`: `bun run scripts/gen-icons.ts --derived` (d
 - **Dictionary rebrand**: `brandDictionary()` runs on every loaded dictionary. The capitalised word `OpenCode` in values changes to CodeFlux and `opencode.json` reads as `codeflux.json`; commands, URLs and env vars stay. `overrides.ts` adds `desktop.menu.codefluxSupport` for en/zh/zht and fixes the first-launch default project folder at `myproject` for every locale.
 - **Menus**: the top-left menu button heading reads `desktop.menu.app` (CodeFlux). Help has two items: CodeFlux Support (opens `https://www.routok.com`) and Export Logs.
 - **Settings → About**: CodeFlux logo, name, version, company line and the `www.routok.com` link on top. At the bottom, a small "Open source" block: OpenCode is the basis, MIT, `Copyright (c) 2025 opencode`, not affiliated, link to the OpenCode GitHub page, third-party notices, and the contributor credits.
-- **Provider picker**: one CodeFlux banner plus OpenAI, Anthropic and Google buttons, in the connect dialog and in the empty model picker.
+- **Provider picker**: the "CodeFlux 本地模型" banner (the default, with the CodeFlux logo) above OpenAI, Anthropic and Google tiles — the CodeFlux cloud provider tile is hidden for now — in the connect dialog and in the empty model picker.
+- **Local model**: the `codeflux-4b` provider (`CodeFlux-4B`) runs Qwen3-4B (GGUF Q4_K_M, about 2.5 GB) through the bundled llama.cpp `llama-server` (Vulkan build on Windows and Linux, Metal on macOS, fetched into `packages/desktop/resources/llama` by `script/fetch-llama.ts` during `pack` and shipped as an extra resource; the release workflow pins `LLAMA_CPP_TAG`, and the macOS pack signs the binaries there ad hoc; the desktop passes its location as `CODEFLUX_LLAMA_DIR`). The Local sign-in calls the `codeflux.local` RPC: `probe` reports whether the runtime and model exist, the form asks before downloading, `setup` runs the download (HTTP Range resume into `~/.codeflux/models`, Hugging Face then hf-mirror, GGUF magic check) and starts `llama-server` (`--jinja`, 16k context, `-ngl 99` with a CPU retry, loopback port from 18080) in the background, `cancel` stops a download. Progress events carry bytes and speed. The connection stores the endpoint as key credential metadata; when the service boots with an existing connection it starts the server again. The raw `ollama` provider is still dropped from the catalog (`withoutRawOllama`).
 - **CodeFlux provider page**: image, CodeFlux URL (default `https://www.routok.com`), API key, then a model list. "Load models" calls `GET {URL}/v1/models` with the key (`Authorization: Bearer`) from the renderer; the user ticks the models to add (Select all / Clear). Submit calls `integration.connect.key` with `answer: { baseURL, models }` (models comma-joined). The plugin builds `baseURL/v1` and the model list from the stored credential metadata. Provider ID and display name are fixed (`nousflux`, `CodeFlux`). `www.routok.com` answers CORS preflight with `Access-Control-Allow-Origin: *`; another server must do the same.
 - **Free models**: `useProviders()` drops free models of provider `opencode` (`withoutFreeCatalog`); paid ones stay.
 - **Splash**: a static, inlined splash (white, `screen-720.webp` as base64) is injected into both HTML entries and removed by `removeSplash()` after the first frame; the desktop `LoadingSplash` renders the same `CodeFluxSplash`.
@@ -51,6 +52,7 @@ Regenerate from `packages/codeflux`: `bun run scripts/gen-icons.ts --derived` (d
 | `packages/app/src/providers/catalog/providers.ts` | `withoutFreeCatalog()` |
 | `packages/app/src/providers/opencode-logo.tsx`, `models/provider-group.tsx` | CodeFlux mark |
 | `packages/app/src/{new-session/view,servers/connect/screen}.tsx` | `CodeFluxWordmark` (the pin-board wordmark game is no longer shown) |
+| `packages/app/src/shell/errors/error.tsx` | The fatal-error page watermark is `CodeFluxWordmark`, not the OpenCode lettering `Logo` |
 | `packages/app/src/settings/about/about.tsx`, `settings/settings.css` | New About page |
 | `packages/app/src/custom-elements.d.ts` | Replaced a Windows text stub of a symlink with a `/// <reference>` |
 | `packages/app/package.json`, `packages/desktop/package.json`, `packages/core/package.json` | Dependencies on the two new packages |
@@ -62,6 +64,8 @@ Regenerate from `packages/codeflux`: `bun run scripts/gen-icons.ts --derived` (d
 | `packages/desktop/src/main/lifecycle/environment.ts` | No longer deletes `XDG_STATE_HOME` |
 | `packages/desktop/resources/linux/opencode-desktop.desktop` | Name and path say CodeFlux |
 | `packages/core/src/plugin/provider.ts` | Registers `NousFluxPlugin` |
+| `packages/core/src/session/runner/prompt/system.txt`, `src/plugin/system-prompt/{gpt,gpt-astra,kimi,meta,trinity}.txt` | The agent identity lines say CodeFlux, so the model introduces itself as CodeFlux |
+| `packages/core/src/plugin/skill.ts`, `src/plugin/skill/opencode.md` | The built-in product skill is named CodeFlux (id `codeflux`); the manual body rebrands the product word while commands, paths, package names and doc URLs stay `opencode` |
 | `LICENSE`, `NOTICE.md` | Rewritten as the enterprise license: Part 1 CodeFlux Proprietary License (owner Hongkong CONTESSA INTELLIGENCE TECH LIMITED), Part 2 the OpenCode MIT text |
 
 ## 5. Build and run (Windows x64)

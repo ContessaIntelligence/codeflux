@@ -5,7 +5,7 @@ name: codeflux-release
 #   - Push a tag such as `v2.1.4`, or
 #   - run this workflow by hand (Actions > codeflux-release > Run workflow) and enter the version.
 #
-# Nothing here is signed: Windows shows a SmartScreen warning and macOS needs `xattr -cr CodeFlux.app` after
+# Nothing here is signed: Windows shows a SmartScreen warning and macOS users install with the install-mac.sh release asset (curl does not quarantine) or run `xattr -cr CodeFlux.app` after
 # extracting. See packages/codeflux/SPEC.md, section 14.
 
 on:
@@ -84,6 +84,11 @@ jobs:
         run: bun run pack
         env:
           OPENCODE_CHANNEL: prod
+          # fetch-llama.ts bundles llama.cpp's llama-server (the local CodeFlux-4B model) on every platform. The tag is
+          # pinned so all three builds ship the same, tested llama.cpp; bump it deliberately. The token avoids the
+          # anonymous GitHub API rate limit.
+          LLAMA_CPP_TAG: b12119
+          GITHUB_TOKEN: ${{ github.token }}
 
       # `pack` leaves the unpacked app on Windows; the installer is built around that app in a second pass.
       - name: Build Windows installer
@@ -126,6 +131,13 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       VERSION: ${{ inputs.version || github.ref_name }}
     steps:
+      - name: Check out
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+          sparse-checkout: script/install-codeflux-mac.sh
+          sparse-checkout-cone-mode: false
+
       - name: Download
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -135,6 +147,7 @@ jobs:
 
       - name: Checksums
         run: |
+          cp script/install-codeflux-mac.sh release/install-mac.sh
           cd release
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
@@ -146,5 +159,5 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "CodeFlux ${tag#v}" \
-            --notes "CodeFlux ${tag#v}. Unsigned builds: on Windows choose More info > Run anyway; on macOS run \`xattr -cr CodeFlux.app\` after extracting." \
+            --notes "CodeFlux ${tag#v}. Unsigned builds: on Windows choose More info > Run anyway; on macOS (Apple Silicon) install with: curl -fsSL https://github.com/$GITHUB_REPOSITORY/releases/latest/download/install-mac.sh | bash" \
           || gh release upload "$tag" release/* --repo "$GITHUB_REPOSITORY" --clobber

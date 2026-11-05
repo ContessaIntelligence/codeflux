@@ -117,3 +117,51 @@
   font-weight: 440;
   color: var(--v2-text-text-muted);
 }
+
+/* The live console: current step, the command it runs, and its streamed output. */
+.cf-local-progress {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cf-local-step {
+  font-weight: 530;
+  color: var(--v2-text-text-base);
+}
+
+.cf-local-command {
+  max-width: 100%;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--v2-background-bg-layer-02);
+  color: var(--v2-text-text-muted);
+  font-family: var(--font-family-code);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.cf-local-output {
+  width: 100%;
+  max-height: 200px;
+  margin: 0;
+  overflow-y: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--v2-border-border-base);
+  border-radius: 8px;
+  background: var(--v2-background-bg-layer-02);
+  color: var(--v2-text-text-muted);
+  font-family: var(--font-family-code);
+  font-size: 12px;
+  line-height: var(--line-height-compact, 16px);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.cf-local-bar {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--v2-text-text-base);
+}

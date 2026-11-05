@@ -9,7 +9,9 @@ import { TextField } from "@opencode/ui/text-field"
 import { DialogBody, DialogHeader, DialogTitle, Dialog } from "@opencode/ui/dialog"
 import { TextInput } from "@opencode/ui/text-input"
 import { BRAND } from "@codeflux/gui/brand"
-import { CodeFluxProviderPicker, NousFluxForm } from "@codeflux/gui/providers"
+import { text } from "@codeflux/gui/i18n"
+import { CodeFluxProviderPicker, LocalModelForm, NousFluxForm } from "@codeflux/gui/providers"
+import { LOCAL_MODEL, LocalRpc } from "@codeflux/provider-codeflux/local"
 import { showToast } from "@/shell/notifications/toast"
 import {
   type Component,
@@ -270,6 +272,8 @@ function ProviderConnection(props: {
   const integrationID = props.provider
   const isConsole = props.provider === CONSOLE_INTEGRATION
   const isNousFlux = props.provider === BRAND.nousfluxID
+  const isLocal = props.provider === BRAND.localID
+  const localRpc = () => sdk.api.rpc(LocalRpc)
   const remote = isConsole && authServerName(sdk.server) !== undefined
 
   const [state, setState] = createStore<{
@@ -494,6 +498,8 @@ function ProviderConnection(props: {
       return props.onTitle(language.t("provider.connect.title.anthropicProMax"))
 
     if (isNousFlux) return props.onTitle(BRAND.nousfluxName)
+
+    if (isLocal) return props.onTitle(text(language.locale(), "local.title"))
 
     props.onTitle(
       language.t("provider.connect.title", {
@@ -1534,6 +1540,20 @@ function ProviderConnection(props: {
           </Match>
           <Match when={controller.methodIndex() === undefined}>
             <MethodSelection />
+          </Match>
+          <Match when={isLocal && controller.currentMethod()?.type === "key" && controller.auth.state() !== "error"}>
+            <LocalModelForm
+              locale={language.locale()}
+              rpc={localRpc()}
+              model={LOCAL_MODEL}
+              busy={controller.auth.state() === "refreshing"}
+              onCancel={props.onBack}
+              onSubmit={(input) =>
+                controller.auth.connectKey(input.key, { baseURL: input.baseURL, models: input.models }).catch((error) => {
+                  throw new Error(formatServerError(error, language.t))
+                })
+              }
+            />
           </Match>
           <Match when={isNousFlux && controller.currentMethod()?.type === "key" && controller.auth.state() !== "error"}>
             <NousFluxForm

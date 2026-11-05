@@ -59,6 +59,11 @@
   gap: 12px;
 }
 
+.cf-picker-tile-logo {
+  width: 20px;
+  height: 20px;
+}
+
 .cf-picker-tile {
   display: flex;
   min-height: 72px;

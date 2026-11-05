@@ -59,6 +59,7 @@
       "version": "2.1.4",
       "dependencies": {
         "@codeflux/gui": "workspace:*",
+        "@codeflux/provider-codeflux": "workspace:*",
         "@corvu/drawer": "catalog:",
         "@dnd-kit/abstract": "0.5.0",
         "@dnd-kit/dom": "0.5.0",
@@ -219,7 +220,7 @@
       },
     },
     "packages/codeflux-provider": {
-      "name": "@codeflux/provider-nousflux",
+      "name": "@codeflux/provider-codeflux",
       "version": "0.1.0",
       "dependencies": {
         "@opencode/plugin": "workspace:*",
@@ -295,7 +296,7 @@
         "@ai-sdk/provider": "3.0.8",
         "@ai-sdk/provider-utils": "4.0.23",
         "@ai-sdk/vercel": "2.0.39",
-        "@codeflux/provider-nousflux": "workspace:*",
+        "@codeflux/provider-codeflux": "workspace:*",
         "@ff-labs/fff-bun": "0.10.5",
         "@ff-labs/fff-node": "0.10.5",
         "@lydell/node-pty": "catalog:",
@@ -1610,7 +1611,7 @@
 
     "@codeflux/gui": ["@codeflux/gui@workspace:packages/codeflux"],
 
-    "@codeflux/provider-nousflux": ["@codeflux/provider-nousflux@workspace:packages/codeflux-provider"],
+    "@codeflux/provider-codeflux": ["@codeflux/provider-codeflux@workspace:packages/codeflux-provider"],
 
     "@corvu/dialog": ["@corvu/dialog@0.2.4", "", { "dependencies": { "@corvu/utils": "~0.4.2", "solid-dismissible": "~0.1.1", "solid-focus-trap": "~0.1.8", "solid-presence": "~0.2.0", "solid-prevent-scroll": "~0.1.10" }, "peerDependencies": { "solid-js": "^1.8" } }, "sha512-n54vJq+fOy8GVrnYBdJpD6JXNuyx7LOeMrRxwzAvZnYGpW8+AA12tnb/P/2emJj/HjOO5otheGKb0breshdFlA=="],
 

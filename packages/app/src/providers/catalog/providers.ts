@@ -2,7 +2,7 @@ import { useData } from "@/runtime/server/current"
 import { useServerSDK } from "@/runtime/server/client"
 import { normalizeProviderList } from "@/runtime/server/global-sync/utils"
 import { isServiceUnavailableError } from "@opencode/client/promise"
-import { withoutFreeCatalog } from "@codeflux/gui/model-filter"
+import { withoutFreeCatalog, withoutRawOllama } from "@codeflux/gui/model-filter"
 import { retry } from "@opencode/util/retry"
 import { Iterable, pipe } from "effect"
 import { createEffect, createMemo, type Accessor } from "solid-js"
@@ -50,9 +50,9 @@ export function useProviders(directory: Accessor<string | undefined>) {
 
     if (!provider || !model) return emptyProviderCatalog
 
-    // CodeFlux does not offer the keyless OpenCode catalog, so it is dropped before any picker, setting or default
-    // model reads the catalog.
-    return withoutFreeCatalog(normalizeProviderList(provider, model))
+    // CodeFlux does not offer the keyless OpenCode catalog, and the local Ollama endpoint surfaces as CodeFlux-4B, so
+    // both are dropped before any picker, setting or default model reads the catalog.
+    return withoutRawOllama(withoutFreeCatalog(normalizeProviderList(provider, model)))
   })
 
   const ready = () => {

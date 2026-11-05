@@ -44,6 +44,8 @@ const connect = Effect.fn("BackgroundService.connect")(function* (mode: "initial
   const version = serviceVersion({ channel: CHANNEL, isolated, mode, version: cli.version })
 
   if (isolated) process.env.XDG_STATE_HOME = app.getPath("userData")
+  // The CLI runs from a staged copy, so the local-model runtime shipped beside the bundled CLI is passed explicitly.
+  if (app.isPackaged) process.env.CODEFLUX_LLAMA_DIR = path.join(process.resourcesPath, "llama")
   const client = yield* Effect.promise(() => import("@opencode/client/service"))
 
   const file = serviceFile({

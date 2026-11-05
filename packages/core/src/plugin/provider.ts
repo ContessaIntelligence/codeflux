@@ -1,7 +1,7 @@
 import { AmazonBedrockPlugin } from "./provider/amazon-bedrock.js"
 import { AzurePlugin } from "./provider/azure.js"
 import { CerebrasPlugin } from "./provider/cerebras.js"
-import { NousFluxPlugin } from "@codeflux/provider-nousflux"
+import { CodeFluxLocalPlugin, NousFluxPlugin } from "@codeflux/provider-codeflux"
 import { ChatGPTPlugin } from "./provider/chatgpt.js"
 import { CloudflareAIGatewayPlugin } from "./provider/cloudflare-ai-gateway.js"
 import { CloudflareWorkersAIPlugin } from "./provider/cloudflare-workers-ai.js"
@@ -38,6 +38,7 @@ export const ProviderPlugins: PluginInternal.InternalPlugin[] = [
   AmazonBedrockPlugin,
   AzurePlugin,
   CerebrasPlugin,
+  CodeFluxLocalPlugin,
   ChatGPTPlugin,
   CloudflareAIGatewayPlugin,
   CloudflareWorkersAIPlugin,

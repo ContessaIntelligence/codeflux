@@ -1,3 +1,4 @@
+export { CodeFluxLocalPlugin } from "./local.js"
 export { NousFluxPlugin } from "./nousflux.js"
 export {
   normalizeBaseURL,
