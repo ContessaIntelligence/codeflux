@@ -105,15 +105,20 @@ export function isLicensed() {
 export function accountView(): AccountView {
   const now = serverSeconds()
 
+  // The view is sent as JSON, which has no `undefined`: an optional field is left out instead of set to undefined.
   return {
     signedIn: stored !== undefined,
     pending: flow !== undefined,
     licensed: licensedAt(stored, now),
     expired: stored !== undefined && stored.plan.expires_at > 0 && now >= stored.plan.expires_at,
-    user: stored ? { id: stored.user.id, email: stored.user.email, displayName: stored.user.display_name } : undefined,
-    tierName: stored?.plan.tier_name,
-    expiresAt: stored?.plan.expires_at,
-    failure,
+    ...(stored
+      ? {
+          user: { id: stored.user.id, email: stored.user.email, displayName: stored.user.display_name },
+          tierName: stored.plan.tier_name,
+          expiresAt: stored.plan.expires_at,
+        }
+      : {}),
+    ...(failure === undefined ? {} : { failure }),
   }
 }
 

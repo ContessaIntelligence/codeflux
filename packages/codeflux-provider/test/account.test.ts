@@ -3,6 +3,7 @@ import { existsSync } from "node:fs"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { Schema } from "effect"
 import {
   accountView,
   beginSignIn,
@@ -162,4 +163,19 @@ test("sign-out clears the local session and the saved file", async () => {
 
   expect(accountView()).toMatchObject({ signedIn: false, licensed: false })
   expect(existsSync(file)).toBe(false)
+})
+
+// The `account` RPC output and event travel as JSON, and effect rejects a key whose value is `undefined`:
+// "Expected JSON value at [\"output\"]". The picker could then never read the account again.
+test("the account view is a JSON value signed in and signed out", async () => {
+  const isJson = Schema.is(Schema.Json)
+
+  await Bun.write(file, JSON.stringify(stored({ expires_at: now() + 3600 })))
+  await loadAccount()
+  expect(accountView().signedIn).toBe(true)
+  expect(isJson(accountView())).toBe(true)
+
+  await signOutAccount()
+  expect(accountView().signedIn).toBe(false)
+  expect(isJson(accountView())).toBe(true)
 })
