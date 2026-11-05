@@ -145,35 +145,24 @@ function AccountPanel(props: {
           </>
         }
       >
-        <div class="cf-account-head">
+        {/* Three compact rows: title, status and sign out; ID, name and email; level, expiry and renew. */}
+        <div class="cf-account-row">
           <span class="cf-account-title">{t("account.title")}</span>
           <span class="cf-account-badge" data-status={status()}>
             {t(status() === "active" ? "account.status.valid" : status() === "expired" ? "account.status.expired" : "account.status.none")}
           </span>
+          <button type="button" class="cf-account-link" data-action="codeflux-sign-out" onClick={() => props.onSignOut?.()}>
+            {t("account.signout")}
+          </button>
         </div>
-        <dl class="cf-account-grid">
-          <div>
-            <dt>{t("account.id")}</dt>
-            <dd>{props.account.user?.id}</dd>
-          </div>
-          <div>
-            <dt>{t("account.name")}</dt>
-            <dd>{props.account.user?.displayName}</dd>
-          </div>
-          <div class="cf-account-wide">
-            <dt>{t("account.email")}</dt>
-            <dd data-slot="account-email">{props.account.user?.email}</dd>
-          </div>
-          <div>
-            <dt>{t("account.tier")}</dt>
-            <dd>{props.account.tierName ?? "—"}</dd>
-          </div>
-          <div>
-            <dt>{t("account.expires")}</dt>
-            <dd>{expiry()}</dd>
-          </div>
-        </dl>
-        <div class="cf-account-actions">
+        <div class="cf-account-row">
+          <Field label={t("account.id")} colon={t("account.colon")} value={props.account.user?.id} />
+          <Field label={t("account.name")} colon={t("account.colon")} value={props.account.user?.displayName} />
+          <Field label={t("account.email")} colon={t("account.colon")} value={props.account.user?.email} slot="account-email" />
+        </div>
+        <div class="cf-account-row">
+          <Field label={t("account.tier")} colon={t("account.colon")} value={props.account.tierName ?? "—"} />
+          <Field label={t("account.expires")} colon={t("account.colon")} value={expiry()} />
           <button
             type="button"
             class="cf-account-action"
@@ -182,9 +171,6 @@ function AccountPanel(props: {
             onClick={() => props.onOpenSite?.()}
           >
             {t("account.renew")}
-          </button>
-          <button type="button" class="cf-account-link" data-action="codeflux-sign-out" onClick={() => props.onSignOut?.()}>
-            {t("account.signout")}
           </button>
         </div>
       </Show>
@@ -199,3 +185,18 @@ function AccountPanel(props: {
   )
 }
 
+
+/** One "Label: value" pair of the account card. */
+function Field(props: { label: string; colon: string; value: string | number | undefined; slot?: string }) {
+  return (
+    <span class="cf-account-field">
+      <span class="cf-account-label">
+        {props.label}
+        {props.colon}
+      </span>
+      <span class="cf-account-value" data-slot={props.slot}>
+        {props.value}
+      </span>
+    </span>
+  )
+}

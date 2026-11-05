@@ -80,30 +80,34 @@
 .cf-account {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 4px;
+  padding: 8px 14px;
   border: 1px solid var(--v2-border-border-base);
-  border-radius: 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 18px;
 }
 
-.cf-account-head {
+/* One line of the card; it wraps only when the window is too narrow for it. */
+.cf-account-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  column-gap: 16px;
+  row-gap: 2px;
 }
 
 .cf-account-title {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 20px;
 }
 
 .cf-account-badge {
-  padding: 2px 10px;
+  padding: 0 8px;
   border-radius: 999px;
   border: 1px solid var(--v2-border-border-base);
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 16px;
   color: var(--v2-text-text-muted);
 }
 
@@ -113,32 +117,21 @@
 }
 
 .cf-account-text {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 18px;
   color: var(--v2-text-text-muted);
 }
 
-.cf-account-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 16px;
+.cf-account-field {
+  min-width: 0;
 }
 
-.cf-account-grid dt {
-  font-size: 12px;
+.cf-account-label {
   color: var(--v2-text-text-muted);
 }
 
-.cf-account-grid dd {
-  font-size: 14px;
+.cf-account-value {
   font-weight: 530;
-}
-
-.cf-account-wide {
-  grid-column: 1 / -1;
-}
-
-.cf-account-wide dd {
   overflow-wrap: anywhere;
 }
 
@@ -148,28 +141,35 @@
   gap: 12px;
 }
 
-.cf-account-action {
-  padding: 6px 14px;
-  font-size: 13px;
-  border-radius: 8px;
+/* The last button of a row sits at its right edge. */
+.cf-account-row > button:last-child {
+  margin-left: auto;
 }
 
-.cf-account-action[data-variant="primary"] {
+.cf-picker .cf-account-action {
+  padding: 0 10px;
+  font-size: 12px;
+  line-height: 16px;
+  border-radius: 6px;
+}
+
+.cf-picker .cf-account-action[data-variant="primary"] {
   background: var(--v2-text-text-base);
   color: var(--v2-background-base, #fff);
   border-color: transparent;
 }
 
-.cf-account-link {
+.cf-picker .cf-account-link {
   border: none !important;
-  padding: 6px 4px;
-  font-size: 13px;
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 18px;
   color: var(--v2-text-text-muted);
   text-decoration: underline;
 }
 
 .cf-account-error {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--v2-text-text-base);
 }
 
