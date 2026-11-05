@@ -11,6 +11,7 @@ import { TextInput } from "@opencode/ui/text-input"
 import { BRAND } from "@codeflux/gui/brand"
 import { text } from "@codeflux/gui/i18n"
 import { CodeFluxProviderPicker, LocalModelForm, NousFluxForm } from "@codeflux/gui/providers"
+import { useCodeFluxAccount } from "../codeflux-account"
 import { LOCAL_MODEL, LocalRpc } from "@codeflux/provider-codeflux/local"
 import { showToast } from "@/shell/notifications/toast"
 import {
@@ -232,11 +233,23 @@ export const DialogConnectProvider: Component<{
   )
 }
 
-// The CodeFlux provider list: NousFlux, OpenAI, Anthropic and Google. It replaces the upstream searchable catalog.
+// The CodeFlux provider list: the account card, the local model, OpenAI, Anthropic and Google. It replaces the upstream
+// searchable catalog.
 function ProviderPicker(props: { directory?: string; onSelect: (provider: string) => void; onPrepare?: () => void }) {
   const language = useLanguage()
+  const codeflux = useCodeFluxAccount()
 
-  return <CodeFluxProviderPicker locale={language.locale()} onSelect={props.onSelect} onPrepare={props.onPrepare} />
+  return (
+    <CodeFluxProviderPicker
+      locale={language.locale()}
+      onSelect={props.onSelect}
+      onPrepare={props.onPrepare}
+      account={codeflux.account()}
+      onSignIn={() => void codeflux.signIn()}
+      onSignOut={() => void codeflux.signOut()}
+      onOpenSite={codeflux.openSite}
+    />
+  )
 }
 
 function ProviderConnection(props: {

@@ -53,6 +53,126 @@
   color: var(--v2-text-text-muted);
 }
 
+/* The local banner is disabled until the account is licensed: dashed, faded, and not clickable. */
+.cf-picker button:disabled,
+.cf-picker button:disabled:hover,
+.cf-picker button:disabled:focus-visible {
+  cursor: not-allowed;
+  background: transparent;
+  opacity: 0.55;
+}
+
+.cf-picker-banner[data-locked] {
+  border-style: dashed;
+}
+
+.cf-picker-lock {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--v2-border-border-base);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--v2-text-text-muted);
+  vertical-align: middle;
+}
+
+.cf-account {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--v2-border-border-base);
+  border-radius: 12px;
+}
+
+.cf-account-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cf-account-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.cf-account-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--v2-border-border-base);
+  font-size: 12px;
+  color: var(--v2-text-text-muted);
+}
+
+.cf-account-badge[data-status="expired"] {
+  color: var(--v2-text-text-base);
+  font-weight: 600;
+}
+
+.cf-account-text {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--v2-text-text-muted);
+}
+
+.cf-account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+.cf-account-grid dt {
+  font-size: 12px;
+  color: var(--v2-text-text-muted);
+}
+
+.cf-account-grid dd {
+  font-size: 14px;
+  font-weight: 530;
+}
+
+.cf-account-wide {
+  grid-column: 1 / -1;
+}
+
+.cf-account-wide dd {
+  overflow-wrap: anywhere;
+}
+
+.cf-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cf-account-action {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.cf-account-action[data-variant="primary"] {
+  background: var(--v2-text-text-base);
+  color: var(--v2-background-base, #fff);
+  border-color: transparent;
+}
+
+.cf-account-link {
+  border: none !important;
+  padding: 6px 4px;
+  font-size: 13px;
+  color: var(--v2-text-text-muted);
+  text-decoration: underline;
+}
+
+.cf-account-error {
+  font-size: 13px;
+  color: var(--v2-text-text-base);
+}
+
 .cf-picker-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

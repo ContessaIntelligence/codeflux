@@ -107,10 +107,10 @@ jobs:
       - name: Collect files
         run: |
           mkdir -p release
-          for f in dist/desktop/opencode-desktop-*; do
+          for f in dist/desktop/codeflux-desktop-*; do
             [ -f "$f" ] || continue
             name=$(basename "$f")
-            cp "$f" "release/CodeFlux-${name#opencode-desktop-}"
+            cp "$f" "release/CodeFlux-${name#codeflux-desktop-}"
           done
           [ -f dist/CodeFlux-windows-x64-portable.zip ] && cp dist/CodeFlux-windows-x64-portable.zip release/ || true
           ls -la release

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { normalizeBaseURL, NOUSFLUX_DEFAULT_URL, parseModels } from "../src/settings"
+import { hasBlankBaseURL, normalizeBaseURL, NOUSFLUX_DEFAULT_URL, parseModels } from "../src/settings"
 
 test.each([
   { input: undefined, expected: `${NOUSFLUX_DEFAULT_URL}/v1` },
@@ -20,4 +20,16 @@ test.each<{ input: unknown; expected: string[] }>([
   { input: "a,a,,b", expected: ["a", "b"] },
 ])("models $input parse to $expected", ({ input, expected }) => {
   expect(parseModels(input)).toEqual(expected)
+})
+
+test.each<{ metadata: Record<string, unknown> | undefined; expected: boolean }>([
+  // What the earlier build saved, and the whitespace variant.
+  { metadata: { baseURL: "", models: "qwen3-4b" }, expected: true },
+  { metadata: { baseURL: "  ", models: "qwen3-4b" }, expected: true },
+  // A real endpoint, a connection that never set one, and no metadata at all are left alone.
+  { metadata: { baseURL: "http://127.0.0.1:18080/v1", models: "qwen3-4b" }, expected: false },
+  { metadata: { models: "qwen3-4b" }, expected: false },
+  { metadata: undefined, expected: false },
+])("blank base URL in $metadata is $expected", ({ metadata, expected }) => {
+  expect(hasBlankBaseURL(metadata)).toBe(expected)
 })

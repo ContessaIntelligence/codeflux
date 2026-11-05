@@ -22,3 +22,11 @@ export function parseModels(input: unknown) {
 
   return [...new Set(input.split(/[\s,]+/).filter((id) => id !== ""))]
 }
+
+/**
+ * Whether a saved connection carries a blank `baseURL`. An earlier build saved the local model that way, and a saved
+ * value overrides the provider's own endpoint, so every request failed with "requires an endpoint baseURL".
+ */
+export function hasBlankBaseURL(metadata: Record<string, unknown> | undefined) {
+  return typeof metadata?.baseURL === "string" && metadata.baseURL.trim() === ""
+}
