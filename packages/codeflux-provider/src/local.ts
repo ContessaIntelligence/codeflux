@@ -181,7 +181,10 @@ export const CodeFluxLocalPlugin = define({
           return fail(server)
         }
 
-        enter("ready", 4)
+        // One `ready` event that already carries the endpoint: the form connects on the first `ready` it sees, so an
+        // earlier one without `baseURL` would save an empty URL that then overrides the provider's own setting.
+        current.stage = "ready"
+        current.step = 4
         yield* Effect.logInfo("codeflux.local: ready")
         emit({ port: server.port, baseURL: localBaseURL(server.origin) })
       } catch (error) {
