@@ -1548,11 +1548,14 @@ function ProviderConnection(props: {
               model={LOCAL_MODEL}
               busy={controller.auth.state() === "refreshing"}
               onCancel={props.onBack}
-              onSubmit={(input) =>
-                controller.auth.connectKey(input.key, { baseURL: input.baseURL, models: input.models }).catch((error) => {
+              onSubmit={async (input) => {
+                // The local model is one connection per computer. `connect.key` always adds a credential, so a
+                // reconnect would pile up another CodeFlux-4B each time; replace the old ones instead.
+                await Promise.all(serverAccounts().map((account) => sdk.api.credential.remove({ credentialID: account.id })))
+                await controller.auth.connectKey(input.key, { baseURL: input.baseURL, models: input.models }).catch((error) => {
                   throw new Error(formatServerError(error, language.t))
                 })
-              }
+              }}
             />
           </Match>
           <Match when={isNousFlux && controller.currentMethod()?.type === "key" && controller.auth.state() !== "error"}>
