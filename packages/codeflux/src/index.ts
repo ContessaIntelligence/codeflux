@@ -5,6 +5,7 @@ export {
   CodeFluxProviderPicker,
   type CodeFluxAccount,
   LocalModelForm,
+  type LocalModelAction,
   type LocalModelStatus,
   MyModelsPanel,
   type LocalRpcClient,

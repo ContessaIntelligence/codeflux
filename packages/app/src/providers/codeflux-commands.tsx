@@ -1,12 +1,15 @@
-import { createMemo, createSignal, onCleanup, onMount } from "solid-js"
+import { createMemo, onCleanup, onMount } from "solid-js"
+import { createStore } from "solid-js/store"
 import { Dialog, DialogBody, DialogHeader, DialogTitle } from "@opencode/ui/dialog"
 import { useDialog } from "@opencode/ui/context/dialog"
 import { BRAND } from "@codeflux/gui/brand"
 import { text, type TextKey } from "@codeflux/gui/i18n"
-import { MyModelsPanel, type LocalModelStatus } from "@codeflux/gui/providers"
+import { MyModelsPanel, type LocalModelAction, type LocalModelStatus } from "@codeflux/gui/providers"
 import { LocalRpc } from "@codeflux/provider-codeflux/local"
 import { useCommand } from "@/shell/commands/command"
+import { formatServerError } from "@/runtime/server/errors"
 import { useLanguage } from "@/runtime/i18n/language"
+import { usePlatform } from "@/runtime/platform/platform"
 import { ServerProvider } from "@/runtime/server/current"
 import { ServerConnection, useServers } from "@/runtime/server/registry"
 import { useGlobal } from "@/runtime/server/runtime"
@@ -21,48 +24,76 @@ export const codefluxCommands = {
 type ModelsStatus = LocalModelStatus & { readonly starting: boolean; readonly failure?: string }
 
 /** The part of the `codeflux.local` RPC client the My Models page calls. */
+type CallOptions = { readonly signal?: AbortSignal }
+
 type ModelsRpc = {
-  status: (input: Record<string, never>) => Promise<ModelsStatus>
-  start: (input: Record<string, never>) => Promise<{ readonly state: string }>
-  stop: (input: Record<string, never>) => Promise<{ readonly state: string }>
+  status: (input: Record<string, never>, options?: CallOptions) => Promise<ModelsStatus>
+  start: (input: { force?: boolean }, options?: CallOptions) => Promise<{ readonly state: string }>
+  stop: (input: { force?: boolean }, options?: CallOptions) => Promise<{ readonly state: string }>
   events: { on: (name: "account", handler: () => void) => () => void }
 }
 
-const describe = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause))
+// Reading the status is quick, so a service that stays silent this long is treated as not responding.
+const STATUS_TIMEOUT_MS = 8_000
+
+// A forced stop lists the processes and waits for a start to let go, which takes longer than a plain call.
+const ACTION_TIMEOUT_MS = 30_000
+
+class TimeoutError extends Error {}
+
+// Runs a call with a time limit. The signal cancels the request itself, so a service that stays silent does not keep a
+// connection busy: the browser allows only a few at once, and the rest of the app needs them.
+const within = <T,>(call: (options: CallOptions) => Promise<T>, ms: number) => {
+  const signal = AbortSignal.timeout(ms)
+
+  return call({ signal }).catch((cause: unknown) => {
+    throw signal.aborted ? new TimeoutError("timeout") : cause
+  })
+}
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
- * The My Models page: the state of the CodeFlux local model with Start and Stop. Opened by the My Models menu, which
- * can also ask it to start or stop right away. Loading the model takes a while, so a start answers at once and the page
- * polls the status until the server answers or the start fails.
+ * The My Models page: the state of the CodeFlux local model with Start, Stop, Force stop and Force restart. Opened by
+ * the My Models menu, which can also ask it to start or stop right away. Loading the model takes a while, so a start
+ * answers at once and the page polls the status until the server answers or the start fails. Every call has a time
+ * limit, so a service that does not answer shows as not responding instead of leaving the page waiting.
  */
 function MyModelsDialog(props: {
   rpc: ModelsRpc
   action?: "start" | "stop"
   onSignIn: () => void
   onInstall: () => void
+  onRestartApp: () => void
 }) {
   const language = useLanguage()
   const t = (key: TextKey, params?: Record<string, string>) => text(language.locale(), key, params)
-  const [status, setStatus] = createSignal<ModelsStatus>()
-  const [busy, setBusy] = createSignal<"start" | "stop">()
-  const [notice, setNotice] = createSignal<string>()
+
+  const [state, setState] = createStore<{
+    status?: ModelsStatus
+    unavailable: boolean
+    busy?: LocalModelAction
+    notice?: string
+  }>({ unavailable: false })
+
   let alive = true
 
   onCleanup(() => {
     alive = false
   })
 
+  const failure = (cause: unknown) =>
+    cause instanceof TimeoutError ? t("mymodels.result.timeout") : t("mymodels.result.error", { error: formatServerError(cause, language.t) })
+
   const refresh = () =>
-    props.rpc.status({}).then(
+    within((options) => props.rpc.status({}, options), STATUS_TIMEOUT_MS).then(
       (next) => {
-        if (alive) setStatus(next)
+        if (alive) setState({ status: next, unavailable: false })
 
         return next
       },
       (cause: unknown) => {
-        if (alive) setNotice(t("mymodels.result.error", { error: describe(cause) }))
+        if (alive) setState({ unavailable: true, notice: failure(cause) })
 
         return undefined
       },
@@ -78,48 +109,58 @@ function MyModelsDialog(props: {
     }
   }
 
-  const start = async () => {
-    setBusy("start")
-    setNotice(undefined)
-    const result = await props.rpc.start({}).then(
-      (value) => ({ state: value.state, error: "" }),
-      (cause: unknown) => ({ state: "error", error: describe(cause) }),
+  // Start, or with `force` a forced restart: the service ends every local model server first.
+  const begin = async (force: boolean) => {
+    setState({ busy: force ? "force-restart" : "start", notice: undefined })
+
+    const result = await within((options) => props.rpc.start({ force }, options), ACTION_TIMEOUT_MS).then(
+      (value) => ({ state: value.state, error: "", timedOut: false }),
+      (cause: unknown) => ({ state: "error", error: failure(cause), timedOut: cause instanceof TimeoutError }),
     )
 
     if (result.state === "starting") {
       const done = await settle()
-      setNotice(
+      setState(
+        "notice",
         done?.running ? t("mymodels.result.started") : t("mymodels.result.failed", { error: done?.failure ?? "" }),
       )
     }
-    if (result.state === "already-running") setNotice(t("mymodels.result.already"))
+
+    if (result.state === "already-running") setState("notice", t("mymodels.result.already"))
+
     // `unlicensed` and `not-installed` need no notice: the page already says so, with the sign-in or the install.
-    if (result.state === "busy") setNotice(t("mymodels.result.busy"))
-    if (result.state === "error") setNotice(t("mymodels.result.error", { error: result.error }))
-    setBusy(undefined)
+    if (result.state === "busy") setState("notice", t("mymodels.result.busy"))
+
+    if (result.state === "error") setState({ notice: result.error, unavailable: result.timedOut })
+    setState("busy", undefined)
     await refresh()
   }
 
-  const stop = async () => {
-    setBusy("stop")
-    setNotice(undefined)
-    const result = await props.rpc.stop({}).then(
-      (value) => ({ state: value.state, error: "" }),
-      (cause: unknown) => ({ state: "error", error: describe(cause) }),
+  // Stop, or with `force` a forced stop: the service ends every local model server, even one it did not start.
+  const halt = async (force: boolean) => {
+    setState({ busy: force ? "force-stop" : "stop", notice: undefined })
+
+    const result = await within((options) => props.rpc.stop({ force }, options), ACTION_TIMEOUT_MS).then(
+      (value) => ({ state: value.state, error: "", timedOut: false }),
+      (cause: unknown) => ({ state: "error", error: failure(cause), timedOut: cause instanceof TimeoutError }),
     )
 
-    if (result.state === "stopped") setNotice(t("mymodels.result.stopped"))
-    if (result.state === "not-running") setNotice(t("mymodels.result.notRunning"))
-    if (result.state === "error") setNotice(t("mymodels.result.error", { error: result.error }))
-    setBusy(undefined)
+    if (result.state === "stopped")
+      setState("notice", t(force ? "mymodels.result.forceStopped" : "mymodels.result.stopped"))
+
+    if (result.state === "not-running") setState("notice", t("mymodels.result.notRunning"))
+
+    if (result.state === "error") setState({ notice: result.error, unavailable: result.timedOut })
+    setState("busy", undefined)
     await refresh()
   }
 
   onMount(() => {
     onCleanup(props.rpc.events.on("account", () => void refresh()))
     void refresh().then(() => {
-      if (props.action === "start") return start()
-      if (props.action === "stop") return stop()
+      if (props.action === "start") return begin(false)
+
+      if (props.action === "stop") return halt(false)
     })
   })
 
@@ -135,13 +176,17 @@ function MyModelsDialog(props: {
       <DialogBody class="max-h-[calc(100vh_-_68px)] min-h-0 flex-none gap-0 overflow-y-auto px-2 pb-2">
         <MyModelsPanel
           locale={language.locale()}
-          status={status()}
-          busy={busy()}
-          notice={notice()}
-          onStart={() => void start()}
-          onStop={() => void stop()}
+          status={state.status}
+          unavailable={state.unavailable}
+          busy={state.busy}
+          notice={state.notice}
+          onStart={() => void begin(false)}
+          onStop={() => void halt(false)}
+          onForceStop={() => void halt(true)}
+          onForceRestart={() => void begin(true)}
           onSignIn={props.onSignIn}
           onInstall={props.onInstall}
+          onRestartApp={props.onRestartApp}
         />
       </DialogBody>
     </Dialog>
@@ -157,6 +202,7 @@ export function CodeFluxCommands() {
   const command = useCommand()
   const dialog = useDialog()
   const language = useLanguage()
+  const platform = usePlatform()
   const global = useGlobal()
   const servers = useServers()
   const connection = createMemo(() => servers.list.find((item) => ServerConnection.local(item)))
@@ -172,6 +218,7 @@ export function CodeFluxCommands() {
     // Outside a route there is no server or directory in scope, so the dialog brings its own server.
     void dialog.show(() => {
       const controller = useProviderConnectController()
+
       if (localModel) controller.select(BRAND.localID)
 
       return (
@@ -193,6 +240,7 @@ export function CodeFluxCommands() {
         action={action}
         onSignIn={() => void openProviders()}
         onInstall={() => void openProviders(true)}
+        onRestartApp={() => void platform.restart()}
       />
     ))
   }

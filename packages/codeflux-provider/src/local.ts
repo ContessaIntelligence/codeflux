@@ -21,6 +21,7 @@ import {
   hasModel,
   hasRuntime,
   MODEL,
+  forceStopServers,
   serverStatus,
   stopServer,
 } from "./local-runtime.js"
@@ -173,10 +174,19 @@ export const CodeFluxLocalPlugin = define({
       }
     })
 
-    const start = Effect.fn("CodeFluxLocalPlugin.start")(function* () {
+    const start = Effect.fn("CodeFluxLocalPlugin.start")(function* (force: boolean) {
       if (!isLicensed()) return { state: "unlicensed" as const }
       if (activeRun) return { state: "busy" as const }
       if (!hasRuntime() || !hasModel()) return { state: "not-installed" as const }
+
+      if (force) {
+        yield* Effect.logInfo("codeflux.local: forced restart")
+        yield* Effect.promise(forceStopServers)
+        // The start that was under way gives up once its server is gone; a hung one is left behind and replaced.
+        for (let i = 0; i < 10 && startState.running; i++) yield* Effect.sleep("500 millis")
+        startState.running = false
+      }
+
       if (serverStatus().running) return { state: "already-running" as const }
       if (startState.running) return { state: "starting" as const }
 
@@ -245,14 +255,23 @@ export const CodeFluxLocalPlugin = define({
               server: serverStatus(),
             }),
           ),
-        start: () => start(),
+        start: (input) => start(input.force === true),
         // The connection stays: "Start local model" brings the server back without connecting again.
-        stop: () =>
-          Effect.sync(() => {
+        stop: (input) =>
+          Effect.promise(async () => {
             const running = serverStatus().running
-            stopServer()
 
-            return { state: running ? ("stopped" as const) : ("not-running" as const) }
+            if (input.force !== true) {
+              stopServer()
+
+              return { state: running ? ("stopped" as const) : ("not-running" as const) }
+            }
+
+            // Forced: also ends servers this service did not start, and a start that is under way.
+            const killed = await forceStopServers()
+            startState.failure = undefined
+
+            return { state: running || killed > 0 ? ("stopped" as const) : ("not-running" as const), killed }
           }),
         account: () => Effect.sync(accountView),
         signIn: () => Effect.promise(beginSignIn).pipe(Effect.map((url) => ({ url }))),

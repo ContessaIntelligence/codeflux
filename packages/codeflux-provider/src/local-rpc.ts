@@ -94,7 +94,16 @@ const StartOutput = Schema.toStandardSchemaV1(
   }),
 )
 
-const StopOutput = Schema.toStandardSchemaV1(Schema.Struct({ state: Schema.Literals(["stopped", "not-running"]) }))
+const StopOutput = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    state: Schema.Literals(["stopped", "not-running"]),
+    /** How many local model servers a forced stop ended, present only on a forced stop. */
+    killed: Schema.optional(Schema.Int),
+  }),
+)
+
+/** `force` ends every CodeFlux local model server, even one this service did not start or that does not answer. */
+const ForceInput = Schema.toStandardSchemaV1(Schema.Struct({ force: Schema.optional(Schema.Boolean) }))
 
 const Progress = Schema.toStandardSchemaV1(
   Schema.Struct({
@@ -134,11 +143,14 @@ export const LocalRpc = Rpc.define({
     /**
      * Starts the local model server in the background when it is not running, and makes sure the CodeFlux-4B
      * connection exists so the model can be chosen. Needs an active plan and an installed model; a running server is
-     * left alone.
+     * left alone. With `force` it first ends every CodeFlux local model server, so it is also a forced restart.
      */
-    start: { input: Empty, output: StartOutput },
-    /** Stops the local model server. The connection stays, so `start` brings it back. */
-    stop: { input: Empty, output: StopOutput },
+    start: { input: ForceInput, output: StartOutput },
+    /**
+     * Stops the local model server. The connection stays, so `start` brings it back. With `force` it ends every
+     * CodeFlux local model server, even one this service did not start, and cancels a start that is under way.
+     */
+    stop: { input: ForceInput, output: StopOutput },
     /** The current account state. */
     account: { input: Empty, output: AccountOutput },
     /** Starts a browser sign-in and returns the page to open. The result arrives later as an `account` event. */

@@ -1,9 +1,10 @@
-import { spawn, type ChildProcess } from "node:child_process"
+import { execFile, spawn, type ChildProcess } from "node:child_process"
 import { existsSync } from "node:fs"
 import { mkdir, open, rename, stat } from "node:fs/promises"
 import { createServer } from "node:net"
 import { homedir } from "node:os"
 import path from "node:path"
+import { promisify } from "node:util"
 import { LOCAL_DEFAULT_PORT, LOCAL_MODEL } from "./local-rpc.js"
 
 /** Qwen3-4B, Q4_K_M. The mirror is tried when the first source cannot be reached (for example from mainland China). */
@@ -142,6 +143,8 @@ export type Server = { port: number; origin: string }
 
 let running: { child: ChildProcess; server: Server } | undefined
 let starting: Promise<Server | string> | undefined
+// Bumped by a forced stop, so a start that is under way gives up instead of retrying on the CPU after its server died.
+let epoch = 0
 
 /** Whether this process has a llama-server running, and on which port. */
 export const serverStatus = () =>
@@ -158,6 +161,91 @@ export const stopServer = () => {
 process.on("exit", stopServer)
 
 /**
+ * The ids of the CodeFlux local model servers in a process list. A CodeFlux server is a `llama-server` executable
+ * started with the model alias, whichever install started it, so this also finds one left behind by an earlier run or
+ * another install, and leaves any other llama-server, or any other program that merely mentions one, alone.
+ */
+export function strayPids(processes: readonly { pid: number; command: string }[], alias = LOCAL_MODEL) {
+  const flag = new RegExp(String.raw`\s--alias\s+${alias}(\s|$)`)
+
+  return processes
+    .filter((item) => {
+      // The program is the first word of the command line, quoted when its path has spaces.
+      const first = /^\s*(?:"([^"]+)"|(\S+))/.exec(item.command)
+      const program = first?.[1] ?? first?.[2] ?? ""
+
+      return /(^|[\\/])llama-server(\.exe)?$/i.test(program) && flag.test(item.command)
+    })
+    .map((item) => item.pid)
+}
+
+const run = promisify(execFile)
+
+/** The running llama-server processes with their command lines, from the operating system. */
+export async function listProcesses(): Promise<{ pid: number; command: string }[]> {
+  if (process.platform === "win32") {
+    const { stdout } = await run(
+      "powershell",
+      [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "Get-CimInstance Win32_Process -Filter \"Name='llama-server.exe'\" | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress",
+      ],
+      { timeout: 15_000, windowsHide: true },
+    )
+    const text = stdout.trim()
+    if (!text) return []
+    const parsed: unknown = JSON.parse(text)
+    // One process prints an object, several print an array.
+    const rows = Array.isArray(parsed) ? parsed : [parsed]
+
+    return rows.flatMap((row) =>
+      typeof row === "object" && row !== null && "ProcessId" in row && "CommandLine" in row
+        ? [{ pid: Number(row.ProcessId), command: String(row.CommandLine ?? "") }]
+        : [],
+    )
+  }
+
+  const { stdout } = await run("ps", ["-axo", "pid=,command="], { timeout: 15_000 })
+
+  return stdout.split(/\r?\n/).flatMap((line) => {
+    const match = /^\s*(\d+)\s+(.*)$/.exec(line)
+
+    return match ? [{ pid: Number(match[1]), command: match[2] }] : []
+  })
+}
+
+/**
+ * Force stop: ends every CodeFlux local model server, the one this process tracks and any other, and cancels a start
+ * that is under way. Resolves with how many servers it ended. Listing the processes can fail, in which case only the
+ * tracked server is stopped.
+ */
+export async function forceStopServers() {
+  epoch++
+  const tracked = running?.child.pid
+  stopServer()
+  const found = await listProcesses().then(strayPids, () => [] as number[])
+  const pids = [...new Set([...found, ...(tracked === undefined ? [] : [tracked])])]
+
+  const killed = pids.filter((pid) => {
+    try {
+      process.kill(pid, "SIGKILL")
+
+      return true
+    } catch {
+      // Already gone, or not ours to end.
+      return false
+    }
+  })
+
+  // A start that was waiting on a server we just ended finishes at once; give it a moment to let go.
+  await Promise.race([starting?.catch(() => undefined), new Promise((resolve) => setTimeout(resolve, 5_000))])
+
+  return killed.length
+}
+
+/**
  * Starts llama-server (or joins the running one) and waits until `/health` answers. Resolves with the endpoint, or a
  * failure message. A GPU start that dies early is retried on the CPU.
  */
@@ -169,10 +257,13 @@ export const ensureServer = (preferredPort: number | undefined): Promise<Server 
 }
 
 async function launch(preferredPort: number | undefined) {
+  const mine = epoch
   const port = await freePort(preferredPort ?? LOCAL_DEFAULT_PORT)
   const server = { port, origin: `http://127.0.0.1:${port}` }
   const gpu = await tryStart(server, 99)
   if (typeof gpu !== "string") return gpu
+  // A forced stop ended the server this start was waiting on: do not start another one.
+  if (mine !== epoch) return "The start was cancelled"
   const cpu = await tryStart(server, 0)
 
   return typeof cpu !== "string" ? cpu : `${cpu} (GPU: ${gpu})`
