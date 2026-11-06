@@ -30,3 +30,28 @@ export function parseModels(input: unknown) {
 export function hasBlankBaseURL(metadata: Record<string, unknown> | undefined) {
   return typeof metadata?.baseURL === "string" && metadata.baseURL.trim() === ""
 }
+
+/**
+ * The `codeflux.local` `status` output. The port is left out while the server is stopped instead of set to
+ * `undefined`: the output travels as JSON, which has no `undefined`, and a key holding one fails the whole call.
+ */
+export function localStatus(input: {
+  runtime: boolean
+  model: boolean
+  licensed: boolean
+  /** A start is under way: the model is loading and the server is not answering yet. */
+  starting: boolean
+  /** Why the last start failed, until the next one. */
+  failure?: string
+  server: { running: true; port: number } | { running: false }
+}) {
+  return {
+    runtime: input.runtime,
+    model: input.model,
+    licensed: input.licensed,
+    starting: input.starting,
+    running: input.server.running,
+    ...(input.server.running ? { port: input.server.port } : {}),
+    ...(input.failure === undefined ? {} : { failure: input.failure }),
+  }
+}

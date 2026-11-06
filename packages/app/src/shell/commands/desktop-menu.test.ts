@@ -4,6 +4,7 @@ import { settingsOpenCommand } from "@/settings/command"
 import { sidebarToggleCommand } from "@/shell/shell"
 import { previousSessionCommand, nextSessionCommand } from "@/shell/titlebar/tab-strip"
 import { goBackCommand, goForwardCommand, newTabCommand } from "@/shell/titlebar/titlebar"
+import { codefluxCommands } from "@/providers/codeflux-commands"
 import { exportLogsCommand } from "./desktop"
 import { DESKTOP_MENU, nextDesktopZoomLevel } from "./desktop-menu"
 
@@ -17,6 +18,7 @@ test("every desktop menu command is one its owner registers", () => {
     goForwardCommand.id,
     previousSessionCommand.id,
     nextSessionCommand.id,
+    ...Object.values(codefluxCommands),
     // The host publishes extension commands as `${extension}.${id}`.
     `${terminal.id}.${terminalToggleCommand.id}`,
   ])

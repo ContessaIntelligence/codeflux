@@ -3,7 +3,7 @@ import { define } from "@opencode/plugin/effect/plugin"
 import { Form } from "@opencode/schema/form"
 import { Integration } from "@opencode/schema/integration"
 import { Model } from "@opencode/schema/model"
-import { hasBlankBaseURL, normalizeBaseURL, OPENAI_COMPATIBLE_PACKAGE, parseModels } from "./settings.js"
+import { hasBlankBaseURL, localStatus, normalizeBaseURL, OPENAI_COMPATIBLE_PACKAGE, parseModels } from "./settings.js"
 import {
   accountView,
   beginSignIn,
@@ -21,6 +21,7 @@ import {
   hasModel,
   hasRuntime,
   MODEL,
+  serverStatus,
   stopServer,
 } from "./local-runtime.js"
 import {
@@ -138,6 +139,55 @@ export const CodeFluxLocalPlugin = define({
       return { state: "restarted" as const }
     })
 
+    // "Start local model". Loading the model takes a while, so the work runs in the background: `start` answers at
+    // once and the page polls `status`, which reports `starting` and, if it did not come up, the failure.
+    const startState = { running: false, failure: undefined as string | undefined }
+
+    const bringUp = Effect.fn("CodeFluxLocalPlugin.bringUp")(function* () {
+      yield* sync()
+      const saved = Number(URL.parse(loaded.baseURL)?.port) || LOCAL_DEFAULT_PORT
+      const server = yield* Effect.promise(() => ensureServer(saved))
+
+      if (typeof server === "string") {
+        startState.failure = server
+        return yield* Effect.logInfo(`codeflux.local: start failed: ${server}`)
+      }
+      const baseURL = localBaseURL(server.origin)
+
+      // The model was never connected, or the customer removed it: connect it so it can be chosen.
+      const connection = yield* ctx.integration.connection.active(LOCAL_ID)
+
+      if (!connection)
+        yield* ctx.integration.connect
+          .key({
+            integrationID: Integration.ID.make(LOCAL_ID),
+            key: "local",
+            answer: { baseURL, models: LOCAL_MODEL },
+          })
+          .pipe(Effect.orElseSucceed(() => undefined))
+      yield* sync()
+
+      if (loaded.baseURL !== baseURL) {
+        loaded.baseURL = baseURL
+        yield* ctx.provider.reload()
+      }
+    })
+
+    const start = Effect.fn("CodeFluxLocalPlugin.start")(function* () {
+      if (!isLicensed()) return { state: "unlicensed" as const }
+      if (activeRun) return { state: "busy" as const }
+      if (!hasRuntime() || !hasModel()) return { state: "not-installed" as const }
+      if (serverStatus().running) return { state: "already-running" as const }
+      if (startState.running) return { state: "starting" as const }
+
+      startState.running = true
+      startState.failure = undefined
+      // Detached from the request fiber, like `setup`: the run outlives this RPC.
+      Effect.runFork(bringUp().pipe(Effect.ensuring(Effect.sync(() => (startState.running = false)))))
+
+      return { state: "starting" as const }
+    })
+
     yield* ctx.integration.transform((editor) => {
       editor.update(LOCAL_ID, (integration) => {
         integration.name = LOCAL_NAME
@@ -184,6 +234,26 @@ export const CodeFluxLocalPlugin = define({
           }),
         cancel: () => Effect.succeed({ cancelled: cancelDownload() }),
         restart: () => restart(),
+        status: () =>
+          Effect.sync(() =>
+            localStatus({
+              runtime: hasRuntime(),
+              model: hasModel(),
+              licensed: isLicensed(),
+              starting: startState.running,
+              failure: startState.failure,
+              server: serverStatus(),
+            }),
+          ),
+        start: () => start(),
+        // The connection stays: "Start local model" brings the server back without connecting again.
+        stop: () =>
+          Effect.sync(() => {
+            const running = serverStatus().running
+            stopServer()
+
+            return { state: running ? ("stopped" as const) : ("not-running" as const) }
+          }),
         account: () => Effect.sync(accountView),
         signIn: () => Effect.promise(beginSignIn).pipe(Effect.map((url) => ({ url }))),
         signOut: () => Effect.promise(signOutAccount).pipe(Effect.as({})),

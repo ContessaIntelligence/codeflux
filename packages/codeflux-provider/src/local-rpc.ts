@@ -64,6 +64,38 @@ const RestartOutput = Schema.toStandardSchemaV1(
   }),
 )
 
+/** What the My Models page shows about the CodeFlux local model (CodeFlux-4B). */
+const StatusOutput = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    /** The bundled `llama-server` executable exists in this build. */
+    runtime: Schema.Boolean,
+    /** The model file is fully downloaded. */
+    model: Schema.Boolean,
+    /** The local model server is running. */
+    running: Schema.Boolean,
+    /** The port it listens on, present only while it runs. */
+    port: Schema.optional(Schema.Int),
+    /** The account allows the local model: signed in, with an active plan. */
+    licensed: Schema.Boolean,
+    /** A start is under way: the model is loading and the server is not answering yet. */
+    starting: Schema.Boolean,
+    /** Why the last start failed, until the next one. */
+    failure: Schema.optional(Schema.String),
+  }),
+)
+
+/**
+ * `start` answers at once. Loading the model takes a while, so `starting` means it runs in the background and the
+ * caller polls `status`, which also carries the failure when it did not come up.
+ */
+const StartOutput = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    state: Schema.Literals(["starting", "already-running", "unlicensed", "not-installed", "busy"]),
+  }),
+)
+
+const StopOutput = Schema.toStandardSchemaV1(Schema.Struct({ state: Schema.Literals(["stopped", "not-running"]) }))
+
 const Progress = Schema.toStandardSchemaV1(
   Schema.Struct({
     stage: Schema.Literals(["checking", "downloading", "starting", "ready", "error"]),
@@ -97,6 +129,16 @@ export const LocalRpc = Rpc.define({
     cancel: { input: Empty, output: CancelOutput },
     /** Stops the local model server and starts it again, then reloads the connection. */
     restart: { input: Empty, output: RestartOutput },
+    /** Whether the local model is installed, running and allowed for this account. */
+    status: { input: Empty, output: StatusOutput },
+    /**
+     * Starts the local model server in the background when it is not running, and makes sure the CodeFlux-4B
+     * connection exists so the model can be chosen. Needs an active plan and an installed model; a running server is
+     * left alone.
+     */
+    start: { input: Empty, output: StartOutput },
+    /** Stops the local model server. The connection stays, so `start` brings it back. */
+    stop: { input: Empty, output: StopOutput },
     /** The current account state. */
     account: { input: Empty, output: AccountOutput },
     /** Starts a browser sign-in and returns the page to open. The result arrives later as an `account` event. */

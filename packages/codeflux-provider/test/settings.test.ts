@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import { hasBlankBaseURL, normalizeBaseURL, NOUSFLUX_DEFAULT_URL, parseModels } from "../src/settings"
+import { Schema } from "effect"
+import { hasBlankBaseURL, localStatus, normalizeBaseURL, NOUSFLUX_DEFAULT_URL, parseModels } from "../src/settings"
 
 test.each([
   { input: undefined, expected: `${NOUSFLUX_DEFAULT_URL}/v1` },
@@ -32,4 +33,34 @@ test.each<{ metadata: Record<string, unknown> | undefined; expected: boolean }>(
   { metadata: undefined, expected: false },
 ])("blank base URL in $metadata is $expected", ({ metadata, expected }) => {
   expect(hasBlankBaseURL(metadata)).toBe(expected)
+})
+
+test.each([
+  { name: "stopped", server: { running: false as const }, extra: {}, expected: { running: false, starting: false } },
+  {
+    name: "running",
+    server: { running: true as const, port: 18080 },
+    extra: {},
+    expected: { running: true, starting: false, port: 18080 },
+  },
+  {
+    name: "loading the model",
+    server: { running: false as const },
+    extra: { starting: true },
+    expected: { running: false, starting: true },
+  },
+  {
+    name: "after a failed start",
+    server: { running: false as const },
+    extra: { failure: "llama-server exited with code 1" },
+    expected: { running: false, starting: false, failure: "llama-server exited with code 1" },
+  },
+])("the local status while $name is a JSON value", ({ server, extra, expected }) => {
+  const status = localStatus({ runtime: true, model: true, licensed: true, starting: false, server, ...extra })
+
+  expect(status).toMatchObject(expected)
+  // JSON has no undefined: an optional field is absent, never a key holding undefined.
+  expect(Object.keys(status).includes("port")).toBe(server.running)
+  expect(Object.keys(status).includes("failure")).toBe("failure" in extra)
+  expect(Schema.is(Schema.Json)(status)).toBe(true)
 })

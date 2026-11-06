@@ -143,6 +143,12 @@ export type Server = { port: number; origin: string }
 let running: { child: ChildProcess; server: Server } | undefined
 let starting: Promise<Server | string> | undefined
 
+/** Whether this process has a llama-server running, and on which port. */
+export const serverStatus = () =>
+  running && running.child.exitCode === null
+    ? { running: true as const, port: running.server.port }
+    : { running: false as const }
+
 /** Stops the llama-server this process started. */
 export const stopServer = () => {
   running?.child.kill()

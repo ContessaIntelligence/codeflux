@@ -258,6 +258,15 @@ export const DESKTOP_MENU: DesktopMenu[] = [
     ],
   },
   {
+    id: "my-models",
+    labelKey: "desktop.menu.myModels",
+    items: [
+      { type: "item", labelKey: "desktop.menu.myModels.signIn", command: "codeflux.signin" },
+      { type: "item", labelKey: "desktop.menu.myModels.start", command: "codeflux.local.start" },
+      { type: "item", labelKey: "desktop.menu.myModels.stop", command: "codeflux.local.stop" },
+    ],
+  },
+  {
     id: "window",
     labelKey: "desktop.menu.window",
     role: "windowMenu",

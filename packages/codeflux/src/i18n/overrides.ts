@@ -10,10 +10,18 @@ export const overrides: Readonly<Record<string, Readonly<Record<string, string>>
   },
   zh: {
     "desktop.menu.codefluxSupport": "CodeFlux 支持",
+    "desktop.menu.myModels": "我的模型",
+    "desktop.menu.myModels.signIn": "登录",
+    "desktop.menu.myModels.start": "启动本地模型",
+    "desktop.menu.myModels.stop": "停止本地模型",
      "desktop.onboarding.defaultProject": "我的项目",
   },
   zht: {
     "desktop.menu.codefluxSupport": "CodeFlux 支援",
+    "desktop.menu.myModels": "我的模型",
+    "desktop.menu.myModels.signIn": "登入",
+    "desktop.menu.myModels.start": "啟動本機模型",
+    "desktop.menu.myModels.stop": "停止本機模型",
     "desktop.onboarding.defaultProject": "我的項目",
   },
 }
