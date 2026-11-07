@@ -16,10 +16,11 @@ export type LocalModelStatus = {
 export type LocalModelAction = "start" | "stop" | "force-stop" | "force-restart"
 
 /**
- * The My Models page: the state of the CodeFlux local model with Start and Stop buttons, and Force stop and Force
- * restart for when the model or its service is stuck. Starting needs an account with an active plan, so a signed-out
- * customer gets the sign-in prompt, and a model that is not installed yet points to the CodeFlux Local page that
- * downloads it. Everything it shows arrives through props; the app owns the RPC calls.
+ * The My Models page: the state of the CodeFlux local model with Start and Stop buttons. The Force stop and Force
+ * restart actions are hidden from the UI; their props and handlers stay so they can come back. Starting needs an
+ * account with an active plan, so a signed-out customer gets the sign-in prompt, and a model that is not installed
+ * yet points to the CodeFlux Local page that downloads it. Everything it shows arrives through props; the app owns
+ * the RPC calls.
  */
 export function MyModelsPanel(props: {
   locale: string
@@ -139,26 +140,7 @@ export function MyModelsPanel(props: {
           {t("mymodels.stop")}
         </button>
       </div>
-      <div class="cf-models-actions" data-slot="force">
-        <button
-          type="button"
-          class="cf-models-action"
-          data-action="my-models-force-stop"
-          disabled={!idle()}
-          onClick={() => props.onForceStop()}
-        >
-          {t("mymodels.forceStop")}
-        </button>
-        <button
-          type="button"
-          class="cf-models-action"
-          data-action="my-models-force-restart"
-          disabled={!idle() || (!unknown() && (!licensed() || state() === "notInstalled"))}
-          onClick={() => props.onForceRestart()}
-        >
-          {t("mymodels.forceRestart")}
-        </button>
-      </div>
+      {/* The Force stop and Force restart buttons are hidden from the UI for now. */}
       <Show when={props.notice}>
         {(notice) => (
           <div role="status" class="cf-models-notice">
